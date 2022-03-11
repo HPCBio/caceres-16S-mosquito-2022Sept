@@ -1,0 +1,1484 @@
+---
+title: "Kim 16S Initial analysis on raw data - Oct 2021"
+author: "Chris Fields"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    pdf_print: paged
+    fig_height: 4
+    fig_width: 6
+    toc: yes
+---
+
+# Intro
+
+TODO
+
+# Set up
+
+Code (not shown in the report) is initialized and loaded here.  We don't include the code in the report but make this available as needed; please see the [Github repository](TODO) for this project for the final version.
+
+Data from the primary project folder should be downloaded from [here](TODO) (requires permissions). Note the following assumes all data are in `2022-Jan-Rerun`.
+
+```{r, echo=TRUE, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+```
+
+```{r, include=FALSE}
+# Note that not all libraries will be needed.  Most phyloseq code uses ggplot and tidyverse internally, therefore we explicitly load here
+library(knitr)
+library(tidyverse)
+library(phyloseq)
+
+# this seems to have issues with caching and phyloseq
+# library(ggtree) 
+
+# For normalization
+library(metagenomeSeq)
+
+# phylogenetic tree input
+library(ape)
+
+# read/modify BIOM 
+library(biomformat)
+
+# ggplot functions for trees and dendrograms
+library(ggdendro)
+
+# distance measures, PERMANOVA, ANOSIM
+library(vegan)
+
+# generation of stats values for graphs
+library(ggpubr)
+
+# normalization (CLR)
+library(mixOmics)
+
+# to get labels2color
+library(WGCNA)
+
+# mixed models (needs to be updated)
+# library(lme4)
+# library(lmerTest)
+# library(nlme)
+# to get post-hoc tests for mixed-model tests 
+# library(lsmeans)
+
+# sample decontamination 
+# library(decontam)
+
+library(devtools)
+
+# needed in case we want to use ANCOM
+#library(exactRankTests)
+
+#Other libraries I added later
+##library(BiocManager)
+##BiocManager::install("microbiome")
+##library(devtools)
+##devtools::install_github("gauravsk/ranacapa")
+##devtools::install_github("hpcbio/plotly_microbiome")
+library(plotly.microbiome)
+library(microbiome)
+library(ranacapa)
+
+# this is to load some extension helper code, see: https://github.com/HPCBio/phyloseq-extended
+devtools::load_all('~/src/phyloseq-extended/')
+```
+
+```{r, include=FALSE}
+# Setting up the analysis, including adding helper functions.  The document won't include the actual code, but the functions are present in the Rmd document.  The functions here include ones to:
+options(stringsAsFactors = FALSE)
+theme_set(theme_bw())
+```
+
+
+```{r, include=FALSE}
+# Remove the tags on the taxonomic ranks, which are redundant with the column headers.
+stripTaxaTags <- function(physeq) {
+  oldMA <- as(tax_table(physeq), "matrix")
+  newMA <- apply(oldMA, 2, function(x) {sub('\\w__','', x)})
+  if (inherits(physeq, "taxonomyTable")) {
+      return(tax_table(newMA))
+  }
+  else {
+      tax_table(physeq) <- tax_table(newMA)
+      return(physeq)
+  }
+}
+```
+
+```{r }
+# Convert sequences to names (culled from https://github.com/LangilleLab/microbiome_helper/blob/master/convert_dada2_out.R) 
+
+renameTaxIds <- function(physeq, file.name="seqs.fasta") {
+  suppressMessages(require("ShortRead"))
+  seqtab.physeq <- otu_table(physeq)
+  seqs <- colnames(seqtab.physeq)
+  ids_study <- paste("seq", 1:ncol(seqtab.physeq), sep = "_")
+  seqs.dna <- ShortRead(sread = DNAStringSet(seqs), id = BStringSet(ids_study))
+  # Write out fasta file.
+  writeFasta(seqs.dna, file = file.name)
+  taxa_names(physeq) <- ids_study
+  # TODO: add the sequences back to the phyloseq instance
+  # physeq <- merge_phyloseq(physeq)
+  return(physeq)
+}
+```
+
+```{r}
+# original code: https://github.com/twbattaglia/btools/blob/master/R/estimate_pd.R
+estimate_pd <- function(phylo) {
+  # Error if input is not of class phylo
+  if(class(phylo) != "phyloseq"){
+    stop("Input file is not of class 'phyloseq'.")
+  }
+
+  # Error if no class phy_tree
+  if(!(.hasSlot(phylo, "phy_tree"))){
+    stop("Could not find tree slot in phylo object.")
+  }
+  
+  if (!require('picante')) stop("Function requires the picante library.")
+
+  # Transpose if needed
+  # Adapted from phyloseq/vegan import
+  OTU <- phyloseq::otu_table(phylo)
+  if (taxa_are_rows(OTU)) {
+    OTU <- t(OTU)
+  }
+
+  # Get matrix version of OTU table
+  otutable <- as(OTU, "matrix")
+
+  # Get phylogenetic tree from phyloseq object
+  tree <- phyloseq::phy_tree(phylo)
+
+  # Print status message
+  message("Calculating Faiths PD-index...")
+
+  # If object is greater than 10mb, then print status message
+  if(object.size(otutable) > 10000000){
+    message("This is a large object, it may take awhile...")
+  }
+
+  # Calculate Faith's PD-index
+  #
+  pdtable <- picante::pd(otutable, tree, include.root = F)
+
+  # Return data frame of results
+  return(pdtable)
+}
+```
+
+```{r}
+# CLR normalization 
+# (from McMurdie (Meth Mol Bio 2018) supplemental package)
+zero_comp = function(x){
+  if(taxa_are_rows(x)){x <- t(x)}
+  matx = otu_table(x)
+  # `zCompositions::cmultRepl` expects the samples to be in rows and OTUs to be in columns
+  matxzc = zCompositions::cmultRepl(matx, method="CZM", output="p-counts")
+  otu_table(x) <- otu_table(matxzc, taxa_are_rows = FALSE)
+  return(x)
+}
+# CLR definition
+geometric_mean = function(x){
+  exp(mean(log(x)))
+}
+clr = function(x, base=2){
+  x <- log((x / geometric_mean(x)), base)
+}
+phyloseq_CLR = function(physeq){
+  suppressMessages({physeq <- zero_comp(physeq)})
+  return(transform_sample_counts(physeq, fun = clr))
+}
+```
+
+# Import and preprocessing
+
+## Initial file input
+
+There is one run with all of the data.  Load it in along with the relevant tree and sequence data (metadata to be added).
+
+First, let's load in the newer taxonomic analysis using QIIME2.  It looks like this:
+
+```{r}
+taxtab <- readRDS('../2022-Jan-Rerun/R1/Phyloseq/tax_final.md5.R1.RDS')
+taxtab[taxtab == 'Unclassified'] <- NA
+knitr::kable(head(taxtab))
+```
+
+```{r}
+colnames(taxtab) <- c("Domain", "Phylum", "Class", "Order", "Family", "Genus", "Species")
+seqtab.tmp <- readRDS('../2022-Jan-Rerun/R1/Phyloseq/seqtab_final.md5.R1.RDS')
+tree.tmp <- read_tree('../2022-Jan-Rerun/R1/Plain/Trees/rooted.R1.newick')
+asvs.tmp <- Biostrings::readDNAStringSet('../2022-Jan-Rerun/R1/Plain/Sequences/asvs.md5.nochim.R1.fna', format = 'fasta')
+physeq <- phyloseq(
+  otu_table(seqtab.tmp, taxa_are_rows = F),
+  tax_table(taxtab),
+  asvs.tmp,
+  tree.tmp)
+
+physeq
+```
+
+The sample names need to be cleaned up
+
+```{r}
+head(sample_names(physeq))
+```
+
+## Load metadata
+
+Load in experimental data on samples (metadata).  Here are the first few rows:
+
+```{r}
+library(readxl)
+tmp <- read_tsv('../Metadata/Metadata.txt')
+tmp$Strain <- factor(tmp$Strain)
+tmp$Sex <- factor(tmp$Sex)
+tmp$Replicate <- factor(tmp$Replicate)
+
+knitr::kable(head(tmp))
+```
+We also read in read QC so we can layer in whether read abundance plays a role.  We need to do a bit of our own read tracking here (it's not currently in the pipeline but can be added).
+
+```{r results="asis"}
+track <- read_tsv("../2022-Jan-Rerun/Plain/QC/all.readtracking.R1.txt")
+knitr::kable(track)
+```
+
+We see a fairly substantial drop from merging; we can possibly use just R1, but let's proceed with this first.
+
+Combine all metadata together for analysis and add back to the class.
+
+```{r}
+tmp2 <- sample_data(right_join(tmp, track, by="SampleID"))
+sample_names(tmp2) <- tmp2$Sample
+sample_names(tmp2)
+```
+
+```{r}
+sample_data(physeq) <- tmp2
+physeq
+```
+
+What do the first rows look like?
+
+```{r results="asis"}
+sample_data(physeq) %>% as("data.frame") %>% head %>% knitr::kable()
+```
+
+# Raw composition plots
+
+Overall compositional summary (stacked bar plots) for samples.  In this example here are the top 15 families by composition per sample, split by treatment.
+
+```{r }
+#ranks <- c("Class", "Order", "Family", "Genus", "Species")
+p <- phyloseq.extended::plot_composition(physeq, 
+                                         taxaSet1 = NULL, 
+                                         taxaRank2 = "Family", 
+                                         fill = "Family", 
+                                         numberOfTaxa = 15)
+p + facet_wrap(~Strain, scales = "free_x", nrow = 1)
+```
+
+MB8 really sticks out
+
+```{r}
+table(tax_table(physeq)[,'Domain'])
+```
+
+All bacterial (no archaea detected).
+
+We will perform some basic filtering to remove those ASVs that are not classified.  
+
+# Sample and Taxa Filtering
+
+The steps below are standard filtering steps that will differ per analysis. 
+
+## Focus on only experimental samples 
+
+In this analysis we are considering all of the data and don't subset anything.  Any sample-specific quality issues that need filtering are addressed as outliers below.
+
+## Removing artifacts
+
+We do need to remove ASVs that are likely artifactual, for example from host, and that we want to remove.  We should get rid of:
+
+* Unranked/unassigned
+* Eukarya (kingdom)
+* Mitochondria
+* Chloroplast
+
+The RDP classifier will misclassify sequences that have very little sequence similarity to 16S based on the way it works; these tend to classify poorly by rank (NA or 'Unclassified' up to and sometimes including Domain/Kingdom).  
+
+What proportion of the ASVs are unassigned at each rank?
+
+```{r}
+taxtab <- tax_table(physeq)
+
+library(scales)
+
+# note this test checks if the rank is NA; if the rank is assigned 'Unclassified' modify the term here
+ranks <- data.frame(apply(taxtab, 2, 
+                          function(x) label_percent(accuracy = 0.01) (sum( x == 'Unclassified' )/length(x) ) ))
+colnames(ranks) <- c("Perc.Unclassified")
+ranks %>% kable
+```
+
+There are a few that unclassified across all ranks.  We should go ahead and remove these (they may be worth checking out later, but as the samples are likely low input they may not be useful). We should also remove any eukaryotic ones, though these will be rare.
+
+How many are unclassified?
+
+```{r }
+table(tax_table(physeq)[,'Domain']) %>% kable
+```
+
+Extract unassigned data, and export sequences to a file for any possible downstream analysis.
+
+```{r}
+unasn <- subset_taxa(physeq, is.na(Phylum))
+unasn
+```
+
+We know all have at least a 'Bacteria' domain-level assignment.  54 are not assigned at the phylum rank.  Export the sequences to a file.
+
+```{r}
+dir.create(file.path('..', 'results', 'unasn-sequences'), showWarnings = FALSE, recursive = TRUE)
+writeXStringSet(refseq(unasn), 
+                filepath = '../results/unasn-sequences/unassigned.fna', 
+                format = 'fasta')
+```
+
+Subset those sequences that have assignments at least at the Phylum level.
+
+```{r }
+physeq <- subset_taxa(physeq, !(Phylum == 'Unclassified'))
+physeq
+```
+
+### Eukaryotic sequences
+
+None were found that were explicitly classified as eukarya, so skipping.
+
+<!-- ```{r } -->
+<!-- # extract eukaryotic sequences if found -->
+<!-- euks <- subset_taxa(physeq.pacbio, Domain == "Eukaryota") -->
+<!-- tax_table(euks) %>% as.data.frame %>% knitr::kable() -->
+<!-- ``` -->
+
+<!-- ```{r } -->
+<!-- tmp <- sample_sums(euks) -->
+<!-- tmp[ tmp > 0 ] -->
+<!-- ``` -->
+
+<!-- ```{r } -->
+<!-- physeq.pacbio <- subset_taxa(physeq.pacbio, !(Domain == 'Eukaryota')) -->
+<!-- ``` -->
+
+### Organelle 16S (mitochondria, chloroplast)
+
+Next we check for organelle 16S.  These could arise in chloroplast or mitochondria.  They are classified under different rank criteria in Silva, so we need to check for them separately. 
+
+Any hits for chloroplast? These are found under the `Class` rank.
+
+```{r }
+table(tax_table(physeq)[,'Order'])['Chloroplast']
+```
+
+3 chloroplast sequences (?!?).  Let's grab these and export to look into further; these are the samples that have chloroplast sequences. 
+
+```{r}
+chloros <- subset_taxa(physeq, Order == 'Chloroplast')
+sample_sums(chloros) %>% magrittr::extract(. > 0)
+```
+
+```{r }
+# use this to filter chloroplast sequence
+#physeq.pacbio <- subset_taxa(physeq.pacbio, Class != 'Chloroplast')
+#physeq.pacbio
+```
+
+Any mitochondrial sequences?  
+
+```{r }
+table(tax_table(physeq)[,'Family'])['Mitochondria']
+```
+
+2 mitochondrial sequences.  What are they?
+
+```{r }
+mitos <- subset_taxa(physeq, Family == 'Mitochondria')
+sample_sums(mitos) %>% magrittr::extract(. > 0)
+```
+
+Note these are found in all samples and are a bit variable.  
+
+For the final filtered data, we will remove the controls and the mitochondrial taxa.
+
+```{r }
+# remove control samples that aren't part of the analysis (water, Zymo)
+#physeq.filtered <- subset_samples(physeq, Treatment != 'Control')
+
+# remove mitochondria
+physeq.filtered <- subset_taxa(physeq, Family != 'Mitochondria')
+
+# remove chloroplast
+physeq.filtered <- subset_taxa(physeq.filtered, Order != 'Chloroplast')
+
+physeq.filtered
+```
+
+## Remove taxa with 0 counts
+
+Do we need to filter out any taxa with 0 counts?  Let's check how many have taxonomic sums equal to 0
+
+```{r }
+table(taxa_sums(physeq.filtered) == 0)
+```
+
+None!  
+
+<!-- Removing these below. -->
+
+<!-- ```{r } -->
+<!-- physeq.filtered <- prune_taxa(taxa_sums(physeq.filtered) > 0, physeq.filtered) -->
+<!-- physeq.filtered -->
+<!-- ``` -->
+
+How about the number of samples who have 0 counts?
+
+```{r }
+table(sample_sums(physeq.filtered) == 0)
+```
+
+No samples with zero counts after filtering in the above steps. No filtering needed.
+
+```{r }
+# sample_data(physeq)[sample_sums(physeq.filtered) == 0]
+```
+
+```{r }
+# physeq.filtered <- prune_samples(sample_sums(physeq.filtered) > 0, physeq)
+# physeq.filtered
+```
+
+## Other contaminants?
+
+We won't run this yet but we can remove biological contaminants here. 
+
+```{r }
+# These steps use the decontam library
+
+# df.contam <- as.data.frame(sample_data(physeq.filtered))
+# df.contam$LibrarySize <- sample_sums(physeq.filtered)
+
+# sample_data(physeq.filtered)$is.neg <- sample_data(physeq.filtered)$Control == "Negative"
+# contamdf.prev <- isContaminant(physeq.filtered, 
+#                                method = "prevalence", 
+#                                neg = "is.neg", 
+#                                threshold = 0.1)
+# 
+# table(contamdf.prev$contaminant)
+```
+
+<!-- Which ones are contaminants? -->
+
+```{r }
+# which(contamdf.prev$contaminant)
+```
+
+<!-- Based on the threshold we are seeing some contaminants showing up; how prevalent are they in the overall samples? -->
+
+```{r }
+# ps.neg <- prune_samples(
+#   sample_data(physeq.filtered)$Control == "Negative", physeq.filtered)
+# ps.neg.presence <- transform_sample_counts(ps.neg, function(abund) 1*(abund > 0))
+# 
+# ps.pos <- prune_samples(
+#   sample_data(physeq.filtered)$Control == "Sample", physeq.filtered)
+# ps.pos.presence <- transform_sample_counts(ps.pos, function(abund) 1*(abund > 0))
+# 
+# df.pres <- data.frame(
+#   prevalence.pos = taxa_sums(ps.pos.presence), 
+#   prevalence.neg = taxa_sums(ps.neg.presence),
+#   contam.prev = contamdf.prev$contaminant)
+# 
+# ggplot(data = df.pres, aes(x=prevalence.neg, y=prevalence.pos, color=contam.prev)) + 
+#   geom_point()
+```
+
+```{r }
+# physeq.filtered <- prune_taxa(!contamdf.prev$contaminant, physeq.filtered)
+# physeq.filtered
+```
+
+## Prune low count samples
+
+We skip this in favor of precedence filtering, but will plot a histogram of sample counts to show the overall distribution.
+
+```{r}
+hist(sample_sums(physeq.filtered), breaks = 50)
+```
+
+Pretty reasonable spread. 2 samples are below our standard 10k count limit.
+
+## Prune out any other samples?
+
+This is where we may want to prune out other problematic samples identified downstream in the analysis.  We should justify here *why* these were removed.
+
+As the analysis is still preliminary at this stage we will skip this for now.
+
+```{r }
+# physeq.filtered <- prune_samples(!(sample_names(physeq.filtered) %in% c("F4A", "A3B", "F16A", "C1A")), physeq.filtered)
+# physeq.filtered
+```
+
+# Basic overview
+
+Let's look at the data.  We have `r ntaxa(physeq.pacbio)` taxa and `r nsamples(physeq.pacbio)` samples.
+
+Before plotting, let's change the order of metadata.
+
+```{r}
+#Rearrange treatment order
+# sample_data(physeq.filtered)$Treatment <- factor(sample_data(physeq.filtered)$Treatment,levels = c("None","Salmonella.None","Salmonella.DFM","Salmonella.PRRSV","Salmonella.PRRSV.DFM"))
+#sample_data(physeq.filtered)$DFM <- factor(sample_data(physeq.filtered)$DFM,levels = c("Control","Absent","Present"))
+```
+
+Here are the sample variables for analysis:
+
+```{r }
+sample_variables(physeq.filtered)
+```
+
+Note these include data from read tracking.  Here is a simple summary of the phylogenetic tree (this is midpoint-rooted in the workflow) with the top 50 most abundant ASVs.
+
+```{r }
+# get the top 50 taxa based on overall taxa sums
+myTaxa1 <- names(sort(taxa_sums(physeq.filtered), decreasing = TRUE))[1:50]
+
+# generate a tmp instance with only those taxa
+ex0 = prune_taxa(myTaxa1, physeq.filtered)
+
+# plot with only those, labeling as needed
+plot_tree(ex0, label.tips = 'Family',
+          ladderize = "left",
+          justify = "left",
+          color = 'Strain'
+          )
+```
+
+# Alpha rarefaction
+
+Let's check whether we're adequately capturing diversity.  This is a simple alpha rarefaction curve; here we want to see the number of taxa plateau as the counts increase.
+
+```{r, include=FALSE}
+p <- suppressMessages(ranacapa::ggrare(physeq.filtered, step = 1000,
+            color = "Strain",
+            label = "Sample",
+            se = FALSE,
+            plot = FALSE,
+            ))
+```
+
+```{r, include=FALSE}
+p + ggtitle("Alpha Rarefaction")
+p
+```
+
+Promising differences between strains.
+
+```{r}
+p <- p + facet_wrap(~Sex) + ggtitle("Alpha Rarefaction by Sex")  # theme(legend.position = c(0.8, 0.2))
+
+p
+#ggsave("alpha-rarefaction-byTreatment-separatedbyTreatment.pdf", path = "./results/final-plots", device = pdf, width = 7.5, height = 5, units = "in")
+```
+
+# Composition plots on filtered data
+
+Here we will post a few plots for an overall compositional summary (stacked bar plots).  In this example here are the top 15 families by composition per sample, split by treatment.
+
+```{r }
+p <- phyloseq.extended::plot_composition(physeq.filtered, 
+                                         taxaSet1 = NULL, 
+                                         taxaRank2 = "Family", 
+                                         fill = "Family", 
+                                         numberOfTaxa = 15)
+p + facet_wrap(~Strain + Sex, scales = "free_x", nrow = 1)
+```
+
+Note MB8; at least it is in a group of n=5.
+
+# Alpha diversity
+
+Check alpha diversity stats.  Note we haven't performed any additional filtering or agglomeration at this stage; this is largely due to recommendations to prevent loss of rare ASVs or singletons in the data, which can dramatically affect alpha diversity measures.  Specifically (from the `plot_richness` function used here):
+
+> You must use untrimmed, non-normalized count data for meaningful results, as many of these estimates are highly dependent on the number of singletons. You can always trim the data later on if needed, just not before using this function.
+
+## Overall
+
+We'll calculate some initial alpha diversity metrics.  TODO: Note we include MB8 here which kills the Fisher test, so we'll initially exclude that test until we remove that sample
+
+```{r}
+# all six measures: Observed, Chao1, ACE, Shannon, Simpson, Inv. Simpson, Fisher
+erDF <- estimate_richness(physeq.filtered, 
+                          measures = c('Observed', 'Chao1', 'ACE', 'Shannon', 'Simpson', 'InvSimpson'))
+
+# add Faith's PD, this is a simple wrapper to format everything correctly
+pd <- estimate_pd(physeq.filtered)
+
+# we don't need SR, it's the same as observed
+erDF$PD <- pd$PD
+
+measures <- colnames(erDF)
+```
+
+We'll check the overall measures for alpha diversity across different groups.  The descriptions below are largely from the [QIIME2 forum](https://forum.qiime2.org/t/alpha-and-beta-diversity-explanations-and-commands/2282) with some additional notes.
+
+* **Observed** - Number of features (ASVs in this case).  From the `phyloseq` package, function `estimate_richness`. 
+* **Chao1** - Estimates number of rare taxa missed from undersampling, with an associated confidence interval. Compare to observed taxa, the difference will be those expected to be missing. From the `phyloseq` package, function `estimate_richness`. 
+* **ACE** - Abundance-based Coverage Estimator. Estimates species richness using a correction factor.  From the `phyloseq` package, function `estimate_richness`. 
+* **Shannon** - Calculates richness and diversity using a natural logarithm, accounts for both abundance and evenness of the taxa present. From the `vegan` package, function `diversity`. 
+* **Simpson** - Measures the relative abundance of the different species making up the sample richness.  From the `vegan` package, function `diversity`. 
+* **Inverse Simpson** - Measures the relative abundance of the different species making up the sample richness.  From the `vegan` package, function `diversity`. 
+* **Fisher** - Relationship between the number of species and the abundance of each species.  From the `vegan` package, function `diversity`. 
+* **Faith's PD** - Sum of the total phylogenetic branch length for one or multiple samples.  From the `picante` package, function `pd`. 
+
+```{r}
+# this is a modification of the plot_richness function from phyloseq, but takes as input a pre-generated matrix of estimates from `estimate_richness` or any other function, plus the phyloseq instance.  
+plot_richness_estimates = function(physeq, 
+                                   erDF, 
+                                   x="samples", 
+                                   color=NULL, 
+                                   shape=NULL, 
+                                   title=NULL,
+                                   scales="free_y", 
+                                   nrow=1, 
+                                   sortby=NULL) {
+  # TODO: add sanity check on matrix (e.g. rows == sample IDs, sample names, and column names)
+  
+  # Measures may have been renamed in `erDF`. Replace it with the name from erDF
+  measures = colnames(erDF)
+  # Define "measure" variables and s.e. labels, for melting.
+  ses = colnames(erDF)[grep("^se\\.", colnames(erDF))]
+  # Remove any S.E. from `measures`
+  measures = measures[!measures %in% ses]
+	# Make the plotting data.frame.
+  # This coerces to data.frame, required for reliable output from reshape2::melt()
+  if( !is.null(sample_data(physeq, errorIfNULL=FALSE)) ){
+    # Include the sample data, if it is there.
+	  DF <- data.frame(erDF, sample_data(physeq))
+  } else {
+    # If no sample data, leave it out.
+    DF <- data.frame(erDF)
+  }
+	if( !"samples" %in% colnames(DF) ){
+	  # If there is no "samples" variable in DF, add it
+		DF$samples <- sample_names(physeq)
+	}
+	# sample_names used to be default, and should also work.
+	# #backwardcompatibility
+	if( !is.null(x) ){
+		if( x %in% c("sample", "samples", "sample_names", "sample.names") ){
+			x <- "samples"
+		}
+	} else {
+    # If x was NULL for some reason, set it to "samples"
+	  x <- "samples"
+	}
+	# melt to display different alpha-measures separately
+	mdf = reshape2::melt(DF, measure.vars=measures)
+  # Initialize the se column. Helpful even if not used.
+  mdf$se <- NA_integer_
+  if( length(ses) > 0 ){
+    ## Merge s.e. into one "se" column
+    # Define conversion vector, `selabs`
+    selabs = ses
+    # Trim the "se." from the names
+    names(selabs) <- substr(selabs, 4, 100)
+    # Make first letter of selabs' names uppercase
+    substr(names(selabs), 1, 1) <- toupper(substr(names(selabs), 1, 1))
+    # use selabs conversion vector to process `mdf`
+    mdf$wse <- sapply(as.character(mdf$variable), function(i, selabs){selabs[i]}, selabs)
+    for( i in 1:nrow(mdf) ){
+      if( !is.na(mdf[i, "wse"]) ){
+        mdf[i, "se"] <- mdf[i, (mdf[i, "wse"])]
+      }
+    }
+    # prune the redundant columns
+    mdf <- mdf[, -which(colnames(mdf) %in% c(selabs, "wse"))]
+  }
+  ## Interpret measures
+  # If not provided (default), keep all 
+  if( !is.null(measures) ){
+    if( any(measures %in% as.character(mdf$variable)) ){
+      # If any measures were in mdf, then subset to just those.
+      mdf <- mdf[as.character(mdf$variable) %in% measures, ]
+    } else {
+      # Else, print warning about bad option choice for measures, keeping all.
+      warning("Argument to `measures` not supported. All alpha-diversity measures (should be) included in plot.")
+    }
+  }
+  # Address `sortby` argument
+  if(!is.null(sortby)){
+    if(!all(sortby %in% levels(mdf$variable))){
+      warning("`sortby` argument not among `measures`. Ignored.")
+    }
+    if(!is.discrete(mdf[, x])){
+      warning("`sortby` argument provided, but `x` not a discrete variable. `sortby` is ignored.")
+    }
+    if(all(sortby %in% levels(mdf$variable)) & is.discrete(mdf[, x])){
+      # Replace x-factor with same factor that has levels re-ordered according to `sortby`
+      wh.sortby = which(mdf$variable %in% sortby)
+      mdf[, x] <- factor(mdf[, x],
+                         levels = names(sort(tapply(X = mdf[wh.sortby, "value"],
+                                                    INDEX = mdf[wh.sortby, x],
+                                                    mean,
+                                                    na.rm=TRUE, simplify = TRUE))))
+    }
+  }
+  # Define variable mapping
+  richness_map = aes_string(x=x, y="value", colour=color, shape=shape)
+  # Make the ggplot.
+  p = ggplot(mdf, richness_map) + geom_point(na.rm=TRUE)  
+  # Add error bars if mdf$se is not all NA
+  if( any(!is.na(mdf[, "se"])) ){
+    p = p + geom_errorbar(aes(ymax=value + se, ymin=value - se), width=0.1) 
+  }
+  # Rotate horizontal axis labels, and adjust
+	p = p + theme(axis.text.x=element_text(angle=-90, vjust=0.5, hjust=0))
+	# Add y-label 
+	p = p + ylab('Alpha Diversity Measure') 
+  # Facet wrap using user-options
+	p = p + facet_wrap(~variable, nrow=nrow, scales=scales)
+	# Optionally add a title to the plot
+	if( !is.null(title) ){
+		p <- p + ggtitle(title)
+	}
+	return(p)
+}
+
+```
+
+Pull out just Faith PD for strain
+
+```{r}
+p <- plot_richness_estimates(physeq = physeq.filtered, 
+                             erDF = erDF,
+                             "Sex", 
+                             color = "Strain", 
+                             title="Alpha diversity in different strains")
+
+p + geom_boxplot(aes(x=Sex,
+                     y=value,
+                     color=NULL), alpha=0.1) +
+  stat_compare_means(label = "p.format",
+                     ref.group = "None") +
+  ylab("Faith PD") + 
+  #scale_x_discrete(labels=labels) + 
+  theme(legend.position = "none")
+
+#ggsave("alpha-faithpd-mucosa-byTreatment.pdf", path = "./results/final-plots", device = pdf, width = 6, height = 5.5, units = "in")
+```
+
+Sample MB8 is at the very bottom (has one taxa).
+
+Based on alpha rarefaction and alpha diversity analysis there does appear to be a difference with strain (key one), and maybe a difference in sex.
+
+## Check for normal distribution 
+
+### Plot to check normality
+
+Do these look like a normal distribution?
+
+```{r }
+library(scales)
+par(mfrow = c(2, 3))
+
+plots <- lapply(c('Chao1', 'Shannon', 'Simpson', 'InvSimpson', 'Observed', 'PD'), 
+       function(x) {
+         shap <- shapiro.test(erDF[,x])
+         hist(erDF[,x], xlab = "Measure", main=paste0(x, "\nShapiro pvalue=", label_number(accuracy = 0.0001)(shap$p.value)), breaks=15)
+         })
+```
+
+Not a lot of samples but the Shannon looks about right (disregarding the obvious outlier)
+
+# Save point
+
+```{r }
+saveRDS(physeq.filtered, file = "../results/phyloseq.filtered.pt1.RDS")
+```
+
+# Filtering
+
+NOTE: The PrevalenceFiltering.Rmd script was run at this point.
+
+## Load Prevalence filtering results.
+
+Until we sort out filtering issues, let's proceed with the raw run.
+
+```{r}
+physeq.prev <- readRDS("../results/PrevalenceFiltering/phyloseq.prevfiltered.RDS")
+#physeq.prev <- physeq.filtered
+```
+
+# Basic composition plot on agglomerated data
+
+```{r }
+p <- phyloseq.extended::plot_composition(physeq.prev,
+                      numberOfTaxa = 15,
+                      taxaSet1 = NULL,
+                      fill = "Family")
+p1 <- p + facet_wrap(~Strain, scales = "free_x", nrow = 1)
+p1
+```
+
+Interesting overall shifts, esp in MB6-7
+
+# Beta diversity
+
+Initial beta diversity heatmap on the glommed samples information. MB8 is causing some issues here so we skip this
+
+```{r }
+p <- plot_heatmap(physeq.prev,
+                  method = "PCoA",
+                  distance = "bray",
+                  taxa.label = "Family",
+                  sample.label = "SampleID",
+                  trans = log_trans(2))
+p
+```
+
+## Relative proportion
+
+Transform data to relative proportions (no prior added).  We may want the option to change this later.
+
+```{r }
+#All samples
+physeq.prop <- transform_sample_counts(physeq.prev, function(x) x/sum(x) )
+sample_data(physeq.prop)$SampleSums <- sample_sums(physeq.prev)
+```
+
+## CLR normalization, McMurdie
+
+Transform data using CLR (from McMurdie (Meth Mol Bio 2018) supplemental package).  
+
+```{r }
+# # copy instance and replace raw counts with CLR-normalized counts
+# physeq.clr <- phyloseq_CLR(physeq.prev)
+# # otu_table(physeq.clr) <- otu_table(as(x, "matrix"), taxa_are_rows = FALSE)
+# physeq.clr
+# 
+# mucosa.clr <- phyloseq_CLR(mucosa.prev)
+# digesta.clr <- phyloseq_CLR(digesta.prev)
+```
+
+## CLR normalization, mixOmics
+
+CLR from `mixOmics`.
+
+```{r }
+# # get counts
+# tmp <- as(otu_table(mucosa.prev),"matrix")
+# 
+# tmp <- tmp
+# 
+# # transpose if needed
+# if(!taxa_are_rows(mucosa.prev)) { tmp <- t(tmp)}
+# 
+# x <- logratio.transfo(tmp, logratio = 'CLR', offset = 1)
+# 
+# # copy instance and replace raw counts with CLR-normalized counts
+# mucosa.clr2 <- mucosa.prev
+# otu_table(mucosa.clr2) <- otu_table(as(x, "matrix"), taxa_are_rows = TRUE)
+# mucosa.clr2
+```
+
+## Set active instance
+
+Set the active normalization type (Prop for now)
+
+```{r}
+physeq.active <- physeq.prop
+```
+
+### Bray-Curtis
+
+```{r }
+set.seed(1234)
+
+finalPhyseq.ord <- ordinate(physeq.active, "PCoA", "bray")
+p1 = plot_ordination(physeq.active,
+                     finalPhyseq.ord,
+                     type="samples",
+                     color="Strain",
+                     shape = "Sex",
+                     label = "SampleID",
+                     title="Samples") + geom_point(size = 2.5)
+p1 + ggtitle("PCoA, Bray Curtis distance") 
+#+  scale_fill_viridis_d()
+```
+
+```{r }
+p1 <- plot_ordination(physeq.active,
+                     finalPhyseq.ord,
+                     type="samples",
+                     color="input",
+                     label="Sample",
+                     title="Samples") + geom_point(size = 2.5)
+p1 + ggtitle("PCoA, Bray Curtis distance") 
+p1
+```
+
+Nothing odd here. 
+
+### Weighted UniFrac
+
+Let's look at Weighted UniFrac
+
+```{r}
+finalPhyseq.ord <- ordinate(physeq.active, "NMDS", "wunifrac")
+p1 = plot_ordination(physeq.active,
+                     finalPhyseq.ord,
+                     type="samples",
+                     color="Strain",
+                     shape = "Sex",
+                     label = "SampleID",
+                     title="Samples") + geom_point(size = 2.5)
+#p1 + scale_color_brewer(palette="Spectral")
+p1
+```
+
+## PERMANOVA
+
+Let's try PERMANOVA on this using the implementation in `vegan` (`adonis2`).
+
+```{r }
+finalPhyseq.meta <- as(sample_data(physeq.active), "data.frame")
+finalPhyseq.prop.dist.bc <- phyloseq::distance(physeq.active, method = "bray")
+```
+
+```{r}
+set.seed(12345)
+adonis2(finalPhyseq.prop.dist.bc ~ Strain * Sex,
+       data = finalPhyseq.meta)
+```
+
+Significant result using both strain and sex, with the interaction also significant.
+
+```{r }
+beta <- betadisper(finalPhyseq.prop.dist.bc, finalPhyseq.meta$Sex)
+permutest(beta)
+```
+
+physeq.prop: Good! This suggests that any issues with heteroscedasticity aren't likely to be significant.  What does this dispersion look like?
+physeq.clr2: heteroscedasticity is significant.
+
+```{r }
+plot(beta, main = "beta dispersion estimates between sexes")
+```
+
+What about Strain?
+
+```{r}
+beta <- betadisper(finalPhyseq.prop.dist.bc, finalPhyseq.meta$Strain)
+permutest(beta)
+```
+
+Significant hit, so some heteroskedascity.
+
+```{r}
+plot(beta, main = "beta dispersion estimates between strains")
+```
+I suspect the big difference here is based on two factors: 1) unbalanced groups, and 2) there are two samples which always seem to be significantly different.
+
+<!-- ## Lindsay's PERMANOVA code -->
+
+<!-- ```{r permanova, eval = TRUE} -->
+<!-- # get P-values for all distances and covariates -->
+<!-- covars <- list(dinp = c("Group", "nonchim"), dinp20 = c("Group", "nonchim"), dinp200 = c("Group", "nonchim")) -->
+<!-- covars <- lapply(covars, function(x){ -->
+<!--   names(x) <- x -->
+<!--   names(x)[x == "nonchim"] <- "Library size" -->
+<!--   x -->
+<!-- }) -->
+<!-- distmeth <- c(Bray = "bray", UniFrac = "unifrac", `Weighted UniFrac` = "wunifrac") -->
+<!-- ps_list <- list(dinp = ps_prop, -->
+<!--                 dinp20 = prune_samples(metadata$Group %in% c("Control", "20 µg/kg DiNP"), ps_prop), -->
+<!--                 dinp200 = prune_samples(metadata$Group %in% c("Control", "200 µg/kg DiNP"), ps_prop)) -->
+<!-- sam_list <- list(dinp = metadata, -->
+<!--                  dinp20 = metadata[metadata$Group %in% c("Control", "20 µg/kg DiNP"),], -->
+<!--                  dinp200 = metadata[metadata$Group %in% c("Control", "200 µg/kg DiNP"),]) -->
+<!-- sam_list[[2]]$Group <- factor(sam_list[[2]]$Group, levels = unique(sam_list[[2]]$Group)) -->
+<!-- sam_list[[3]]$Group <- factor(sam_list[[3]]$Group, levels = unique(sam_list[[3]]$Group)) -->
+<!-- permanova_out <- data.frame(var = unlist(covars), -->
+<!--                             Study = rep(names(covars), times = lengths(covars)), -->
+<!--                             Variable = unlist(lapply(covars, names))) -->
+<!-- permanova_out <- cbind(permanova_out, -->
+<!--                        matrix(NA_real_, nrow = nrow(permanova_out), -->
+<!--                               ncol = 2 * length(distmeth), -->
+<!--                               dimnames = list(NULL, c(names(distmeth), paste0("betadisper_", names(distmeth)))))) -->
+<!-- set.seed(928) -->
+<!-- for(s in names(covars)){ -->
+<!--   for(m in seq_along(distmeth)){ -->
+<!--     this_dist <- phyloseq::distance(ps_list[[s]], method = distmeth[m]) -->
+<!--     for(v in covars[[s]]){ -->
+<!--       this_perm <- adonis2(reformulate(v, response = "this_dist"), -->
+<!--                            data = sam_list[[s]]) -->
+<!--       this_row <- which(permanova_out$Study == s & permanova_out$var == v) -->
+<!--       permanova_out[[names(distmeth)[m]]][this_row] <- this_perm[["Pr(>F)"]][1] -->
+<!--       if(v == "Group"){ -->
+<!--         # beta dispersion -->
+<!--         b <- anova(betadisper(this_dist, sam_list[[s]]$Group, bias.adjust = TRUE)) -->
+<!--         permanova_out[[paste0("betadisper_", names(distmeth)[m])]][this_row] <- b[["Pr(>F)"]][1] -->
+<!--       } -->
+<!--     } -->
+<!--   } -->
+<!-- } -->
+<!-- ``` -->
+
+## ANOSIM
+
+Let's run ANOSIM on the individual factors.  This test seems to have odd issues with stratification with some factors, but as stratifying based on tissue or subject ID seems to have very little effect on significance I will leave it out here.
+
+```{r }
+finalPhyseq.prop.ano <- anosim(finalPhyseq.prop.dist.bc, finalPhyseq.meta$Strain)
+finalPhyseq.prop.ano
+```
+
+```{r }
+plot(finalPhyseq.prop.ano, cex.axis = 0.6)
+```
+
+How about sex?
+
+```{r }
+finalPhyseq.prop.ano <- anosim(finalPhyseq.prop.dist.bc, finalPhyseq.meta$Sex)
+finalPhyseq.prop.ano
+```
+
+Both show significance.  
+
+```{r }
+plot(finalPhyseq.prop.ano)
+```
+
+# Differential abundance analysis
+
+Run DESeq2.
+
+```{r }
+library(DESeq2)
+sd <- sample_data(physeq.prev)
+sd$Strain <- relevel(sd$Strain, "C57BL/6")
+sd$Sex <- relevel(sd$Sex, "M")
+sd$Group <- paste(sd$Strain, sd$Sex, sep = ".") |> make.names() |> factor()
+sample_data(physeq.prev) <- sd
+
+design <- model.matrix(~ 0 + Group, data = as(sd, "data.frame"))
+
+finalPhyseq.adds = phyloseq_to_deseq2(physeq.prev, ~ 0 + Group)
+
+finalPhyseq.adds = DESeq(finalPhyseq.adds, 
+                         test="Wald", 
+                         fitType="local",
+                         sfType = "poscounts",
+                         quiet = TRUE
+                         )
+```
+
+What are the results names?
+
+```{r}
+resultsNames(finalPhyseq.adds)
+```
+
+```{r }
+generateContrastResults <- function(deseq, contrast, physeq, file = "results.txt") {
+  res = results(deseq, 
+              cooksCutoff = FALSE, 
+              contrast = contrast,
+              test = "Wald"
+              )
+  res = cbind(as(res, "data.frame"), as(tax_table(physeq)[rownames(res), ], "matrix"))
+  
+  write.table(res, file, row.names = TRUE, col.names = NA, sep = "\t")
+  return(res)
+}
+
+plotDESeq2Res <- function(res) {
+  sigtab <- res[which(res$padj < 0.05), ]
+  scale_fill_discrete <- function(palname = "Set1", ...) {
+      scale_fill_brewer(palette = palname, ...)
+  }
+  
+  x = tapply(sigtab$log2FoldChange, sigtab$Phylum, function(x) max(x))
+  x = sort(x, TRUE)
+  sigtab$Phylum = factor(as.character(sigtab$Phylum), levels=names(x))
+  
+  # Family order
+  x = tapply(sigtab$log2FoldChange, sigtab$Family, function(x) max(x))
+  x = sort(x, TRUE)
+  sigtab$Family = factor(as.character(sigtab$Family), levels=names(x))
+  p <- ggplot(sigtab, aes(x=Family, y=log2FoldChange, color=Phylum)) + geom_point(size=6) +
+    theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust=0.5))
+  return(p)
+}
+```
+
+Pull out specific contrast. The numbers in the contrast vector below correspond to the different test results we generated: 
+
+## C57BL.6 - F vs M
+
+```{r }
+# [1] "GroupC57BL.6.F"  "GroupC57BL.6.M"  "GroupSHP.T58A.F" "GroupSHP.T58A.M"
+res.test = generateContrastResults(deseq = finalPhyseq.adds, 
+                              contrast = c("Group", "C57BL.6.F", "C57BL.6.M"),
+                              physeq = physeq.prev,
+                              file = "../results/DESeq2/Overall-C57BL.6-FvsM.txt"
+)
+dim(res.test[which(res.test$padj <= 0.05), ])
+```
+
+The first number above corresponds to the number of significant taxa (p <= 0.05) in this test result.
+
+We can plot this w/ a DESeq function...
+
+```{r }
+plotDESeq2Res(res.test)
+```
+
+## SHP-T58A - F vs M
+
+```{r }
+# [1] "GroupC57BL.6.F"  "GroupC57BL.6.M"  "GroupSHP.T58A.F" "GroupSHP.T58A.M"
+res.test = generateContrastResults(deseq = finalPhyseq.adds, 
+                              contrast = c("Group", "SHP.T58A.F", "SHP.T58A.M"),
+                              physeq = physeq.prev,
+                              file = "../results/DESeq2/Overall-SHP.T58A-FvsM.txt"
+)
+dim(res.test[which(res.test$padj <= 0.05), ])
+```
+
+```{r }
+plotDESeq2Res(res.test)
+```
+
+## Males - SHP.T58A vs C57BL.6
+
+```{r }
+# [1] "GroupC57BL.6.F"  "GroupC57BL.6.M"  "GroupSHP.T58A.F" "GroupSHP.T58A.M"
+res.test = generateContrastResults(deseq = finalPhyseq.adds, 
+                              contrast = c("Group", "SHP.T58A.M", "C57BL.6.M"),
+                              physeq = physeq.prev,
+                              file = "../results/DESeq2/Overall-Male-SHP.T58AvsC57BL.6.txt"
+)
+dim(res.test[which(res.test$padj <= 0.05), ])
+```
+
+```{r }
+plotDESeq2Res(res.test)
+```
+
+## Females - SHP.T58A vs C57BL.6
+
+```{r }
+# [1] "GroupC57BL.6.F"  "GroupC57BL.6.M"  "GroupSHP.T58A.F" "GroupSHP.T58A.M"
+res.test = generateContrastResults(deseq = finalPhyseq.adds, 
+                              contrast = c("Group", "SHP.T58A.F", "C57BL.6.F"),
+                              physeq = physeq.prev,
+                              file = "../results/DESeq2/Overall-Female-SHP.T58AvsC57BL.6.txt"
+)
+dim(res.test[which(res.test$padj <= 0.05), ])
+```
+
+```{r }
+plotDESeq2Res(res.test)
+```
+
+<!-- We can also plot this w/ ggplot so we can have more control over the image. These codes will have to be run for each test. -->
+
+<!-- ```{r signif_Overall1} -->
+<!-- sigtab <- res.test[which(res.test$padj < 0.05), ] -->
+<!-- scale_fill_discrete <- function(palname = "Set1", ...) { -->
+<!--     scale_fill_brewer(palette = palname, ...) -->
+<!-- } -->
+<!-- ``` -->
+
+
+<!-- The following may need to be run in the console so that it runs without errors. Run the first chunk first. Adjust the image size to preference, and then run the ggsave() line to save it. -->
+
+<!-- ```{r Genus plot} -->
+<!-- # Genus order -->
+<!-- x = tapply(sigtab$log2FoldChange, sigtab$Genus, function(x) max(x)) -->
+<!-- x = sort(x, TRUE) -->
+<!-- sigtab$Genus = factor(as.character(sigtab$Genus), levels=names(x)) -->
+<!-- ggplot(sigtab, aes(x=Genus, y=log2FoldChange, color=Phylum, size = 9)) + geom_point(size=4) + -->
+<!--   theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust=0.5, size = 8)) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- ggsave("S_vs_PS-Treatment-logfoldchange-Genus.png", path = "./results/") -->
+<!-- ``` -->
+
+
+<!-- ```{r Family plot} -->
+<!-- # Family order -->
+<!-- x = tapply(sigtab$log2FoldChange, sigtab$Family, function(x) max(x)) -->
+<!-- x = sort(x, TRUE) -->
+<!-- sigtab$Family = factor(as.character(sigtab$Family), levels=names(x)) -->
+<!-- ggplot(sigtab, aes(x=Family, y=log2FoldChange, color=Phylum, size = 10)) + geom_point(size=5) + -->
+<!--   theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust=0.5, size = 10)) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- ggsave("S_vs_PS-Treatment-logfoldchange-Family.png", path = "./results/") -->
+<!-- ``` -->
+
+
+<!-- ```{r Species plot} -->
+<!-- # Species order -->
+<!-- x = tapply(sigtab$log2FoldChange, sigtab$Species, function(x) max(x)) -->
+<!-- x = sort(x, TRUE) -->
+<!-- sigtab$Species = factor(as.character(sigtab$Species), levels=names(x)) -->
+<!-- ggplot(sigtab, aes(x=Species, y=log2FoldChange, color=Phylum, size = 10)) + geom_point(size=5) + -->
+<!--   theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust=0.5, size = 10)) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- ggsave("S_vs_PS-Treatment-logfoldchange-Species.png", path = "./results/") -->
+<!-- ``` -->
+
+
+<!-- Add Genus + Species column  -->
+<!-- ```{r} -->
+<!-- sigtab$GeneSpecies <- paste(sigtab$Genus,sigtab$Species) -->
+<!-- ``` -->
+
+<!-- ```{r Genus & Species plot} -->
+<!-- # Genus & Species order -->
+<!-- x = tapply(sigtab$log2FoldChange, sigtab$GeneSpecies, function(x) max(x)) -->
+<!-- x = sort(x, TRUE) -->
+<!-- sigtab$Species = factor(as.character(sigtab$GeneSpecies), levels=names(x)) -->
+<!-- ggplot(sigtab, aes(x=GeneSpecies, y=log2FoldChange, color=Phylum, size = 8)) + geom_point(size=5) + -->
+<!--   theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust=0.5, size = 8)) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- ggsave("PS_DvsC-Treatment-logfoldchange-Genus_Species.png", path = "./results/") -->
+<!-- ``` -->
+
+
+
+<!-- # Heatmap of just pathogenic and benificial taxa -->
+
+<!-- Investigate present pathogenic and beneficial taxa so that I can make a list of OTUs -->
+<!-- ```{r} -->
+<!-- uniq.tax <- tax_table(physeq.prev)[,5:7]  -->
+<!-- uniq.tax[as.character(uniq.tax[,2]) == 'Treponema',] -->
+<!-- ``` -->
+
+<!-- Import beneficial and pathogenic OTU lists -->
+<!-- ```{r} -->
+<!-- bene_taxa <- read.csv("src/Cann_beneficial_taxa.txt", header = TRUE, sep = "\t") -->
+<!-- patho_taxa <- read.csv("src/Cann_pathogenic_taxa.txt", header = TRUE, sep = "\t") -->
+<!-- physeq.heatp <- prune_taxa(patho_taxa$taxa_id, physeq.prev) -->
+<!-- physeq.heatb <- prune_taxa(bene_taxa$taxa_id, physeq.prev) -->
+<!-- ``` -->
+
+<!-- Sample order -->
+<!-- ```{r} -->
+<!-- ord <- c("113",	"114",	"115",	"116",	"161",	"162",	"163",	"164",	"3",	"4",	"7",	"8",	"126",	"127",	"172",	"173",	"131",	"133",	"135",	"136",	"177",	"179",	"181",	"182",	"140",	"144",	"147",	"148",	"186",	"190",	"193",	"194",	"152",	"154",	"157",	"160",	"196",	"198",	"201",	"204") -->
+<!-- ``` -->
+
+<!-- # Genus-level heatmaps -->
+<!-- ```{r} -->
+<!-- #Agglomerate taxa and species level to remove redundancy -->
+<!-- physeq.heatp.glom <- tax_glom(physeq.heatp, taxrank = "Genus", NArm = FALSE) -->
+<!-- physeq.heatb.glom <- tax_glom(physeq.heatb, taxrank = "Genus", NArm = FALSE) -->
+
+<!-- # Genus is not NA -->
+<!-- no.na.p <- !is.na(tax_table(physeq.heatp.glom)[,"Genus"]) -->
+<!-- no.na.b <- !is.na(tax_table(physeq.heatb.glom)[,"Genus"]) -->
+
+<!-- #Genus level in beneficial has a couple NAs that need to be renamed to Family -->
+<!-- tax_table(physeq.heatb.glom)[!no.na.b][,"Genus"] = paste("[Family]", tax_table(physeq.heatb.glom)[!no.na.b][,"Family"]) -->
+<!-- ``` -->
+
+<!-- Pathogenic heatmap -->
+<!-- ```{r} -->
+<!-- p <- plot_heatmap(physeq.heatp.glom, -->
+<!--                   method = "PCoA", -->
+<!--                   distance = "bray", -->
+<!--                   taxa.label = "Genus", -->
+<!--                   sample.label = "Sample", -->
+<!--                   sample.order = ord, -->
+<!--                   taxa.order = "Genus", -->
+<!--                   trans = log_trans(2), -->
+<!--                   title = "Pathogenic Organisms") -->
+<!-- p -->
+
+<!-- #ggsave("pathogenic-genus-level-heatmap.pdf", path = "./results/", device = pdf, width = 8.5, height = 3.5, units = "in") -->
+<!-- ``` -->
+
+<!-- Beneficial heatmap -->
+<!-- ```{r} -->
+<!-- p <- plot_heatmap(physeq.heatb.glom, -->
+<!--                   method = "PCoA", -->
+<!--                   distance = "bray", -->
+<!--                   taxa.label = "Genus", -->
+<!--                   sample.label = "Sample", -->
+<!--                   sample.order = ord, -->
+<!--                   taxa.order = "Genus", -->
+<!--                   trans = log_trans(2), -->
+<!--                   title = "Beneficial Organisms") -->
+<!-- p -->
+
+<!-- #ggsave("beneficial-genus-level-heatmap.pdf", path = "./results/", device = pdf, width = 8.5, height = 8.5, units = "in") -->
+<!-- ``` -->
+
+
+
+<!-- # Species-level heatmaps -->
+<!-- ```{r} -->
+<!-- #Agglomerate taxa and species level to remove redundancy -->
+<!-- physeq.heatp.glom <- tax_glom(physeq.heatp, taxrank = "Species", NArm = FALSE) -->
+<!-- physeq.heatb.glom <- tax_glom(physeq.heatb, taxrank = "Species", NArm = FALSE) -->
+
+<!-- #Replace "Unclassified" and NA species w/ "sp." -->
+<!-- tax_table(physeq.heatp.glom)[,"Species"][tax_table(physeq.heatp.glom)[,"Species"] == "Unclassified"] <- "sp." -->
+<!-- tax_table(physeq.heatp.glom)[,"Species"][is.na(tax_table(physeq.heatp.glom)[,"Species"])] <- "sp." -->
+<!-- tax_table(physeq.heatb.glom)[,"Species"][tax_table(physeq.heatb.glom)[,"Species"] == "Unclassified"] <- "sp." -->
+<!-- tax_table(physeq.heatb.glom)[,"Species"][is.na(tax_table(physeq.heatb.glom)[,"Species"])] <- "sp." -->
+
+<!-- # Replace Species with full name -->
+<!-- tax_table(physeq.heatp.glom)[no.na.p][,"Species"] = paste(tax_table(physeq.heatp.glom)[no.na.p][,"Genus"], tax_table(physeq.heatp.glom)[no.na.p][,"Species"]) -->
+<!-- tax_table(physeq.heatb.glom)[no.na.b][,"Species"] = paste(tax_table(physeq.heatb.glom)[no.na.b][,"Genus"], tax_table(physeq.heatb.glom)[no.na.b][,"Species"]) -->
+
+<!-- #Genus level has a couple NAs that need to be renamed -->
+<!-- tax_table(physeq.heatb.glom)[!no.na.b][,"Genus"] = paste("[Family]", tax_table(physeq.heatb.glom)[!no.na.b][,"Family"]) -->
+<!-- tax_table(physeq.heatb.glom)[!no.na.b][,"Species"] = paste("[Family]", tax_table(physeq.heatb.glom)[!no.na.b][,"Family"]) -->
+<!-- ``` -->
+
+<!-- Pathogenic heatmap -->
+<!-- ```{r} -->
+<!-- p <- plot_heatmap(physeq.heatp.glom, -->
+<!--                   method = "PCoA", -->
+<!--                   distance = "bray", -->
+<!--                   taxa.label = "Species", -->
+<!--                   sample.label = "Sample", -->
+<!--                   sample.order = ord, -->
+<!--                   taxa.order = "Genus", -->
+<!--                   trans = log_trans(2), -->
+<!--                   title = "Pathogenic Organisms") -->
+<!-- p -->
+
+<!-- #ggsave("pathogenic-species-level-heatmap.pdf", path = "./results/", device = pdf, width = 8.5, height = 5, units = "in") -->
+<!-- ``` -->
+
+<!-- Beneficial heatmap -->
+<!-- ```{r} -->
+<!-- p <- plot_heatmap(physeq.heatb.glom, -->
+<!--                   method = "PCoA", -->
+<!--                   distance = "bray", -->
+<!--                   taxa.label = "Species", -->
+<!--                   sample.label = "Sample", -->
+<!--                   sample.order = ord, -->
+<!--                   taxa.order = "Genus", -->
+<!--                   trans = log_trans(2), -->
+<!--                   title = "Beneficial Organisms") -->
+<!-- p -->
+
+<!-- #ggsave("beneficial-species-level-heatmap.pdf", path = "./results/", device = pdf, width = 8.5, height = 8.5, units = "in") -->
+<!-- ``` -->
+
+
+
+
+<!-- ## Random Forest analysis -->
+<!-- ```{r} -->
+<!-- predictors <- otu_table(physeq.prev) -->
+<!-- dim(predictors) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- # Make one column for our outcome/response variable  -->
+<!-- response <- as.factor(sample_data(physeq.prev)$Treatment) -->
+
+<!-- # Combine them into 1 data frame -->
+<!-- rf.data <- data.frame(response, predictors) -->
+<!-- ``` -->
+
+
+<!-- ```{r} -->
+<!-- library(randomForest) -->
+<!-- set.seed(2) -->
+<!-- biom.classify <- randomForest(response~.,  -->
+<!--                               data = rf.data,  -->
+<!--                               ntree = 1000) -->
+<!-- print(biom.classify) -->
+<!-- ``` -->
+
+<!-- ```{r, fig.width=4, fig.height=4} -->
+<!-- # Make a data frame with predictor names and their importance -->
+<!-- imp <- importance(biom.classify) -->
+<!-- imp <- data.frame(predictors = gsub('^X', '', rownames(imp)), imp) -->
+
+<!-- # Order the predictor levels by importance -->
+<!-- imp.sort <- arrange(imp, desc(MeanDecreaseGini)) -->
+
+<!-- tx.tmp <- as.data.frame(tax_table(physeq.prev)[imp.sort$predictors, ]) -->
+<!-- imp.sort$taxonomy <- apply( -->
+<!--   tx.tmp, -->
+<!--   1, -->
+<!--   function(x) paste(x[1:6], collapse=';')) -->
+<!-- imp.sort$taxonomy <- factor(imp.sort$taxonomy) -->
+<!-- imp.sort$predictors <- factor(imp.sort$predictors, levels = imp.sort$predictors) -->
+
+<!-- # Select the top 10 predictors -->
+<!-- imp.10 <- imp.sort[1:20, ] -->
+
+<!-- getPalette = colorRampPalette(brewer.pal(9, "Set1")) -->
+
+<!-- # ggplot -->
+<!-- p <- ggplot(imp.10, aes(x = predictors, y = MeanDecreaseGini, fill = predictors)) + -->
+<!--   geom_bar(stat = "identity") + -->
+<!--   xlab("Predictor (NCBI TaxID)") + -->
+<!--   scale_fill_manual(name = "Taxonomy", -->
+<!--                     values = getPalette(20), -->
+<!--                     labels = imp.10$taxonomy) + -->
+<!--   #theme(legend.position="left"x) -->
+<!--   theme(axis.text.x = element_text(size=8, angle=-45, hjust=0), -->
+<!--         legend.text = element_text(size=6) ) -->
+<!--   #coord_flip(clip = "off")  -->
+<!--   #scale_color_hue(labels = imp.10$taxonomy) -->
+<!--   #ggtitle("Most important taxa for classifying samples\n into treatment A or B") -->
+<!-- p -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- # What are those OTUs? -->
+<!-- taxanames <- imp.10$predictors -->
+
+<!-- r <- taxa_names(physeq.prev) %in% taxanames -->
+
+<!-- as.data.frame(tax_table(physeq.prev)[r, ]) -->
+<!-- ``` -->
+
+# Save
+
+```{r }
+saveRDS(physeq.prev, file = "../results/phyloseq.final.RDS")
+```
+
+# Session
+
+```{r }
+sessionInfo()
+```
+

@@ -53,16 +53,8 @@ library(mixOmics)
 # to get labels2color
 library(WGCNA)
 
-# mixed models (needs to be updated)
-library(lme4)
-library(lmerTest)
-library(nlme)
-
-# sample decontamination
-library(decontam)
-
 # to get post-hoc tests for mixed-model tests 
-library(lsmeans)
+# library(lsmeans)
 library(devtools)
 
 #Other
@@ -246,7 +238,7 @@ p <- p + theme(axis.text.x = element_text(angle = 90, hjust = 1))
 p
 ```
 
-MB5 and MB8 are the lowest count sample, with MB8 to be excluded.
+MB5 is the lowest count sample; MB8 was already excluded.
 
 How do the ASV counts correlate with the read counts?
 
@@ -264,7 +256,7 @@ p <- p + geom_point(aes(color = Group))
 p
 ```
 
-Fairly significant shift from a linear fit, there seems to be a skew with higher count (light green line).
+These are very clean, much cleaner than if we used R1 and R2.
 
 Next we filter based on the features prevalent in the samples.  We will also switch the order of the filtering and tree-based (tip) agglomeration steps due to the nature of PacBio data (noisier at the tips); this is something we're discussing within the group. It may be strain-level variation that is difficult to assign.
 
@@ -445,11 +437,11 @@ I think 0.3 or 0.5 is fine for now if we choose tip agglomeration.
 
 <!-- We'll pick the 0.2 height cutoff sample for the next steps. -->
 
-<!-- ```{r PrevalenceFiltering-22} -->
-<!-- # pseqs <- lapply(cutoff[1:8], function(x) {speedyseq::tip_glom(physeq.filtered, h = x)}) -->
-<!-- physeq.glom <- tip_glom(physeq.filtered, h = 0.3) -->
-<!-- physeq.glom -->
-<!-- ``` -->
+```{r PrevalenceFiltering-22}
+# pseqs <- lapply(cutoff[1:8], function(x) {speedyseq::tip_glom(physeq.filtered, h = x)})
+physeq.glom <- tip_glom(physeq.filtered, h = 0.3)
+physeq.glom
+```
 
 ## Tax agglomeration
 
@@ -490,14 +482,14 @@ plots <- lapply(ranks, function(x) {
 grid.arrange(grobs = plots)
 ```
 
-Wow, quite a bit lost with species!  Are there rows in there with 'NA'?
+Quite a bit lost with species and genus, not atypical for short fragments unfortunately.  Are there rows in there with 'NA'?
 
 ```{r PrevalenceFiltering-25 }
 #apply(tax_table(physeq.glom), 2, function(x) sum(x != "Unclassified"))
 apply(tax_table(physeq.filtered), 2, function(x) sum(is.na(x)))
 ```
 
-We pretty much retain everything if we stick to family.  At the moment I'll likely agglomerate to Family but we can revisit.
+A steep increase in unassigned ranks from Family to Genus. If we stick to family we retain most information.  If we choose taxonomic agglomeration, I'll likely agglomerate to Family simply due to the resolution, but we can revisit.
 
 <!-- Yes, though not nearly as many as the overall # of taxa. This suggests maybe using the phylogenetic tree and `tip_glom`. We have been seeing this work with better fidelity with more recent data sets, particularly from PacBio sequences, but it does require a little checking on the phylogenetic branch lengths to determine the best cutoff.  The code below is based on work Lindsay Clark and Jenny have done in the group.  -->
 
@@ -510,13 +502,13 @@ We pretty much retain everything if we stick to family.  At the moment I'll like
 <!-- ``` -->
 
 ```{r}
-physeq.glom <- tax_glom(physeq.filtered, taxrank = 'Family', NArm = FALSE)
-physeq.glom
+# physeq.glom <- tax_glom(physeq.filtered, taxrank = 'Family', NArm = FALSE)
+# physeq.glom
 ```
 
 ## Features and Prevalence tables
 
-For the filtering, let's assign the original filtered data to a temp variable prior to prevalence filtering.
+For the filtering, let's assign the original filtered data to a temp variable prior to prevalence filtering.  Here we are using the tip agglomerated data
 
 ```{r PrevalenceFiltering-26 }
 physeq0 <- physeq.glom
@@ -529,7 +521,7 @@ Suggested based on the Callahan dada2 workflow (F1000Research, 2017).  This is a
 table(tax_table(physeq0)[,"Phylum"], exclude = NULL)
 ```
 
-A couple are 'NA', which is odd, because these were not present before glom-ing. There are number with low features (1-2 OTUs) as well. Let's remove the NA taxa...
+A number of ASVs at the Phylum level are 'NA', not unusual as we're using tip agglomoeration but also largely uninformative.  There are number with low features (1-2 OTUs) as well. Let's remove the NA taxa...
 
 ```{r PrevalenceFiltering-28 }
 physeq0 <- subset_taxa(physeq0, !is.na(Phylum) & !Phylum %in% c("", "uncharacterized"))
@@ -565,7 +557,7 @@ colnames(tmp) <- c("Phylum", "mean", "sum")
 knitr::kable(tmp)
 ```
 
-Actinos, Proteos, and Firmicutes, with some Bacteroidota.  We can plot these out to get more resolution.  Let's graph the prevalence threshold using 0.05 (5%) as the standard.
+Actinos, Proteos, Firmicutes,and Bacteroidota; the usual suspects.  We can plot these out to get more resolution.  Let's graph the prevalence threshold using 0.05 (5%) as the standard.
 
 ```{r PrevalenceFiltering-31}
 pthresh <- 0.1
@@ -608,7 +600,7 @@ p <- p + theme(axis.text.x = element_text(angle = 90, hjust = 1))
 p
 ```
 
-This retain the vast majority of data.  We can also try moving the agglomeration step *after* prevalence filtering, though this doesn't seem to make a significant difference.
+This retain the majority of data (~90% or so)  We can also try moving the agglomeration step *after* prevalence filtering, though this doesn't seem to make a significant difference.
 
 # Save
 

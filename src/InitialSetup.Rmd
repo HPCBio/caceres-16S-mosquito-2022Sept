@@ -10,15 +10,11 @@ output:
     toc: yes
 ---
 
-# Intro
+# Set up 
 
-TODO
+Code (not shown in the report) is initialized and loaded here.  We don't include the code in the report but make this available as needed; please see the [Github repository](https://github.com/HPCBio/kim-16S-mouse-2022Feb) for this project for the final version.
 
-# Set up
-
-Code (not shown in the report) is initialized and loaded here.  We don't include the code in the report but make this available as needed; please see the [Github repository](TODO) for this project for the final version.
-
-Data from the primary project folder should be downloaded from [here](TODO) (requires permissions). Note the following assumes all data are in `2022-Jan-Rerun`.
+Data from the primary project folder should be downloaded from [here](https://uofi.box.com/s/4p1tp8tn4o64s5j8ywf9ahi7t3s9qajo) (requires permissions). Note the following assumes all data are in `2022-Feb-16S`.
 
 ```{r, echo=TRUE, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
@@ -35,28 +31,28 @@ library(phyloseq)
 # library(ggtree) 
 
 # For normalization
-library(metagenomeSeq)
+# library(metagenomeSeq)
 
 # phylogenetic tree input
-library(ape)
+# library(ape)
 
 # read/modify BIOM 
-library(biomformat)
+# library(biomformat)
 
 # ggplot functions for trees and dendrograms
-library(ggdendro)
+# library(ggdendro)
 
 # distance measures, PERMANOVA, ANOSIM
-library(vegan)
+# library(vegan)
 
 # generation of stats values for graphs
-library(ggpubr)
+# library(ggpubr)
 
 # normalization (CLR)
-library(mixOmics)
+# library(mixOmics)
 
 # to get labels2color
-library(WGCNA)
+# library(WGCNA)
 
 # mixed models (needs to be updated)
 # library(lme4)
@@ -68,7 +64,7 @@ library(WGCNA)
 # sample decontamination 
 # library(decontam)
 
-library(devtools)
+# library(devtools)
 
 # needed in case we want to use ANCOM
 #library(exactRankTests)
@@ -79,12 +75,12 @@ library(devtools)
 ##library(devtools)
 ##devtools::install_github("gauravsk/ranacapa")
 ##devtools::install_github("hpcbio/plotly_microbiome")
-library(plotly.microbiome)
-library(microbiome)
-library(ranacapa)
+# library(plotly.microbiome)
+# library(microbiome)
+# library(ranacapa)
 
 # this is to load some extension helper code, see: https://github.com/HPCBio/phyloseq-extended
-devtools::load_all('~/src/phyloseq-extended/')
+# devtools::load_all('~/src/phyloseq-extended/')
 ```
 
 ```{r, include=FALSE}

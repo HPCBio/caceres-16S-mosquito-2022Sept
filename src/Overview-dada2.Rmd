@@ -58,6 +58,8 @@ library(mixOmics)
 # to get labels2color
 library(WGCNA)
 
+library(scales)
+
 # mixed models (needs to be updated)
 # library(lme4)
 # library(lmerTest)
@@ -78,7 +80,7 @@ library(devtools)
 ##BiocManager::install("microbiome")
 ##library(devtools)
 ##devtools::install_github("gauravsk/ranacapa")
-##devtools::install_github("hpcbio/plotly_microbiome")
+devtools::install_github("hpcbio/plotly_microbiome")
 library(plotly.microbiome)
 library(microbiome)
 library(ranacapa)
@@ -205,16 +207,16 @@ There is one run with all of the data.  Load it in along with the relevant tree 
 First, let's load in the newer taxonomic analysis using QIIME2.  It looks like this:
 
 ```{r}
-taxtab <- readRDS('../2022-Jan-Rerun/R1/Phyloseq/tax_final.md5.R1.RDS')
+taxtab <- readRDS('../results/TADA/R1/Phyloseq/tax_final.md5.R1.RDS')
 taxtab[taxtab == 'Unclassified'] <- NA
 knitr::kable(head(taxtab))
 ```
 
 ```{r}
 colnames(taxtab) <- c("Domain", "Phylum", "Class", "Order", "Family", "Genus", "Species")
-seqtab.tmp <- readRDS('../2022-Jan-Rerun/R1/Phyloseq/seqtab_final.md5.R1.RDS')
-tree.tmp <- read_tree('../2022-Jan-Rerun/R1/Plain/Trees/rooted.R1.newick')
-asvs.tmp <- Biostrings::readDNAStringSet('../2022-Jan-Rerun/R1/Plain/Sequences/asvs.md5.nochim.R1.fna', format = 'fasta')
+seqtab.tmp <- readRDS('../results/TADA/R1/Phyloseq/seqtab_final.md5.R1.RDS')
+tree.tmp <- read_tree('../results/TADA/R1/Plain/Trees/rooted.R1.newick')
+asvs.tmp <- Biostrings::readDNAStringSet('../results/TADA/R1/Plain/Sequences/asvs.md5.nochim.R1.fna', format = 'fasta')
 physeq <- phyloseq(
   otu_table(seqtab.tmp, taxa_are_rows = F),
   tax_table(taxtab),
@@ -229,6 +231,8 @@ The sample names need to be cleaned up
 ```{r}
 head(sample_names(physeq))
 ```
+
+This actually looks okay!
 
 ## Load metadata
 
@@ -246,11 +250,11 @@ knitr::kable(head(tmp))
 We also read in read QC so we can layer in whether read abundance plays a role.  We need to do a bit of our own read tracking here (it's not currently in the pipeline but can be added).
 
 ```{r results="asis"}
-track <- read_tsv("../2022-Jan-Rerun/Plain/QC/all.readtracking.R1.txt")
+track <- read_tsv("../results/TADA/Plain/QC/all.readtracking.R1.txt")
 knitr::kable(track)
 ```
 
-We see a fairly substantial drop from merging; we can possibly use just R1, but let's proceed with this first.
+We see a fairly substantial drop from merging, so we're testing using just R1
 
 Combine all metadata together for analysis and add back to the class.
 
@@ -295,6 +299,10 @@ All bacterial (no archaea detected).
 
 We will perform some basic filtering to remove those ASVs that are not classified.  
 
+```{r}
+saveRDS(physeq, '../results/physeq.raw.RDS')
+```
+
 # Sample and Taxa Filtering
 
 The steps below are standard filtering steps that will differ per analysis. 
@@ -319,11 +327,9 @@ What proportion of the ASVs are unassigned at each rank?
 ```{r}
 taxtab <- tax_table(physeq)
 
-library(scales)
-
 # note this test checks if the rank is NA; if the rank is assigned 'Unclassified' modify the term here
 ranks <- data.frame(apply(taxtab, 2, 
-                          function(x) label_percent(accuracy = 0.01) (sum( x == 'Unclassified' )/length(x) ) ))
+                          function(x) label_percent(accuracy = 0.01) (sum( is.na(x) )/length(x) ) ))
 colnames(ranks) <- c("Perc.Unclassified")
 ranks %>% kable
 ```
@@ -343,7 +349,7 @@ unasn <- subset_taxa(physeq, is.na(Phylum))
 unasn
 ```
 
-We know all have at least a 'Bacteria' domain-level assignment.  54 are not assigned at the phylum rank.  Export the sequences to a file.
+We know all have at least a 'Bacteria' domain-level assignment.  42 are not assigned at the phylum rank.  Export the sequences to a file.
 
 ```{r}
 dir.create(file.path('..', 'results', 'unasn-sequences'), showWarnings = FALSE, recursive = TRUE)
@@ -355,7 +361,7 @@ writeXStringSet(refseq(unasn),
 Subset those sequences that have assignments at least at the Phylum level.
 
 ```{r }
-physeq <- subset_taxa(physeq, !(Phylum == 'Unclassified'))
+physeq <- subset_taxa(physeq, !(is.na(Phylum)))
 physeq
 ```
 
@@ -423,13 +429,15 @@ For the final filtered data, we will remove the controls and the mitochondrial t
 #physeq.filtered <- subset_samples(physeq, Treatment != 'Control')
 
 # remove mitochondria
-physeq.filtered <- subset_taxa(physeq, Family != 'Mitochondria')
+physeq.filtered <- subset_taxa(physeq, is.na(Family) | Family != 'Mitochondria')
 
 # remove chloroplast
-physeq.filtered <- subset_taxa(physeq.filtered, Order != 'Chloroplast')
+physeq.filtered <- subset_taxa(physeq.filtered, is.na(Order) | Order != 'Chloroplast')
 
 physeq.filtered
 ```
+
+Note that we have to be a bit careful, as this can inadvertently remove unassigned ranks (those with NA).
 
 ## Remove taxa with 0 counts
 
@@ -532,21 +540,13 @@ This is where we may want to prune out other problematic samples identified down
 As the analysis is still preliminary at this stage we will skip this for now.
 
 ```{r }
-# physeq.filtered <- prune_samples(!(sample_names(physeq.filtered) %in% c("F4A", "A3B", "F16A", "C1A")), physeq.filtered)
+physeq.filtered <- prune_samples(!(sample_names(physeq.filtered) %in% c("MB8")), physeq.filtered)
 # physeq.filtered
 ```
 
 # Basic overview
 
 Let's look at the data.  We have `r ntaxa(physeq.pacbio)` taxa and `r nsamples(physeq.pacbio)` samples.
-
-Before plotting, let's change the order of metadata.
-
-```{r}
-#Rearrange treatment order
-# sample_data(physeq.filtered)$Treatment <- factor(sample_data(physeq.filtered)$Treatment,levels = c("None","Salmonella.None","Salmonella.DFM","Salmonella.PRRSV","Salmonella.PRRSV.DFM"))
-#sample_data(physeq.filtered)$DFM <- factor(sample_data(physeq.filtered)$DFM,levels = c("Control","Absent","Present"))
-```
 
 Here are the sample variables for analysis:
 
@@ -610,8 +610,6 @@ p <- phyloseq.extended::plot_composition(physeq.filtered,
                                          numberOfTaxa = 15)
 p + facet_wrap(~Strain + Sex, scales = "free_x", nrow = 1)
 ```
-
-Note MB8; at least it is in a group of n=5.
 
 # Alpha diversity
 
@@ -769,15 +767,14 @@ Pull out just Faith PD for strain
 ```{r}
 p <- plot_richness_estimates(physeq = physeq.filtered, 
                              erDF = erDF,
-                             "Sex", 
-                             color = "Strain", 
+                             "Strain", 
+                             color = "Sex", 
                              title="Alpha diversity in different strains")
 
-p + geom_boxplot(aes(x=Sex,
+p + geom_boxplot(aes(x=Strain,
                      y=value,
                      color=NULL), alpha=0.1) +
-  stat_compare_means(label = "p.format",
-                     ref.group = "None") +
+  stat_compare_means(label = "p.signif") +
   ylab("Faith PD") + 
   #scale_x_discrete(labels=labels) + 
   theme(legend.position = "none")
@@ -796,7 +793,6 @@ Based on alpha rarefaction and alpha diversity analysis there does appear to be 
 Do these look like a normal distribution?
 
 ```{r }
-library(scales)
 par(mfrow = c(2, 3))
 
 plots <- lapply(c('Chao1', 'Shannon', 'Simpson', 'InvSimpson', 'Observed', 'PD'), 
@@ -929,9 +925,9 @@ p1 <- plot_ordination(physeq.active,
                      finalPhyseq.ord,
                      type="samples",
                      color="input",
-                     label="Sample",
-                     title="Samples") + geom_point(size = 2.5)
-p1 + ggtitle("PCoA, Bray Curtis distance") 
+                     label="SampleID",
+                     title="Samples") + geom_point(size = 2.5) +
+  ggtitle("PCoA, Bray Curtis distance") 
 p1
 ```
 

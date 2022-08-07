@@ -1,0 +1,601 @@
+```{r, include=FALSE}
+# at some point this should be moved into bookdown
+source("common_code.R", local = knitr::knit_global())
+```
+
+```{r}
+physeq.prev <- readRDS('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/phyloseq.prevfiltered.RDS')
+```
+
+# Basic composition plot on agglomerated data
+
+```{r }
+p <- phyloseq.extended::plot_composition(physeq.prev,
+                      numberOfTaxa = 15,
+                      taxaSet1 = NULL,
+                      fill = "Family")
+p1 <- p + facet_wrap(~Strain, scales = "free_x", nrow = 1)
+p1
+```
+
+Interesting overall shifts, esp in MB6-7
+
+# Beta diversity
+
+Initial beta diversity heatmap on the glommed samples information. MB8 is causing some issues here so we skip this
+
+```{r }
+p <- plot_heatmap(physeq.prev,
+                  method = "PCoA",
+                  distance = "bray",
+                  taxa.label = "Family",
+                  sample.label = "SampleID",
+                  trans = log_trans(2))
+p
+```
+
+## Relative proportion
+
+Transform data to relative proportions (no prior added).  We may want the option to change this later.
+
+```{r }
+#All samples
+physeq.prop <- transform_sample_counts(physeq.prev, function(x) x/sum(x) )
+sample_data(physeq.prop)$SampleSums <- sample_sums(physeq.prev)
+```
+
+## CLR normalization, McMurdie
+
+Transform data using CLR (from McMurdie (Meth Mol Bio 2018) supplemental package).  
+
+```{r }
+# # copy instance and replace raw counts with CLR-normalized counts
+# physeq.clr <- phyloseq_CLR(physeq.prev)
+# # otu_table(physeq.clr) <- otu_table(as(x, "matrix"), taxa_are_rows = FALSE)
+# physeq.clr
+# 
+# mucosa.clr <- phyloseq_CLR(mucosa.prev)
+# digesta.clr <- phyloseq_CLR(digesta.prev)
+```
+
+## CLR normalization, mixOmics
+
+CLR from `mixOmics`.
+
+```{r }
+# # get counts
+# tmp <- as(otu_table(mucosa.prev),"matrix")
+# 
+# tmp <- tmp
+# 
+# # transpose if needed
+# if(!taxa_are_rows(mucosa.prev)) { tmp <- t(tmp)}
+# 
+# x <- logratio.transfo(tmp, logratio = 'CLR', offset = 1)
+# 
+# # copy instance and replace raw counts with CLR-normalized counts
+# mucosa.clr2 <- mucosa.prev
+# otu_table(mucosa.clr2) <- otu_table(as(x, "matrix"), taxa_are_rows = TRUE)
+# mucosa.clr2
+```
+
+## Set active instance
+
+Set the active normalization type (Prop for now)
+
+```{r}
+physeq.active <- physeq.prop
+```
+
+### Bray-Curtis
+
+```{r }
+set.seed(1234)
+
+finalPhyseq.ord <- ordinate(physeq.active, "PCoA", "bray")
+p1 = plot_ordination(physeq.active,
+                     finalPhyseq.ord,
+                     type="samples",
+                     color="Strain",
+                     shape = "Sex",
+                     label = "SampleID",
+                     title="Samples") + geom_point(size = 2.5)
+p1 + ggtitle("PCoA, Bray Curtis distance") 
+#+  scale_fill_viridis_d()
+```
+
+```{r }
+p1 <- plot_ordination(physeq.active,
+                     finalPhyseq.ord,
+                     type="samples",
+                     color="input",
+                     label="SampleID",
+                     title="Samples") + geom_point(size = 2.5) +
+  ggtitle("PCoA, Bray Curtis distance") 
+p1
+```
+
+Nothing odd here. 
+
+### Weighted UniFrac
+
+Let's look at Weighted UniFrac
+
+```{r}
+finalPhyseq.ord <- ordinate(physeq.active, "NMDS", "wunifrac")
+p1 = plot_ordination(physeq.active,
+                     finalPhyseq.ord,
+                     type="samples",
+                     color="Strain",
+                     shape = "Sex",
+                     label = "SampleID",
+                     title="Samples") + geom_point(size = 2.5)
+#p1 + scale_color_brewer(palette="Spectral")
+p1
+```
+
+## PERMANOVA
+
+Let's try PERMANOVA on this using the implementation in `vegan` (`adonis2`).
+
+```{r }
+finalPhyseq.meta <- as(sample_data(physeq.active), "data.frame")
+finalPhyseq.prop.dist.bc <- phyloseq::distance(physeq.active, method = "bray")
+```
+
+```{r}
+set.seed(12345)
+adonis2(finalPhyseq.prop.dist.bc ~ Strain,
+       data = finalPhyseq.meta)
+```
+
+<!-- Significant result using both strain and sex, with the interaction also significant. -->
+
+<!-- ```{r } -->
+<!-- beta <- betadisper(finalPhyseq.prop.dist.bc, finalPhyseq.meta$Sex) -->
+<!-- permutest(beta) -->
+<!-- ``` -->
+
+<!-- physeq.prop: Good! This suggests that any issues with heteroscedasticity aren't likely to be significant.  What does this dispersion look like? -->
+<!-- physeq.clr2: heteroscedasticity is significant. -->
+
+<!-- ```{r } -->
+<!-- plot(beta, main = "beta dispersion estimates between sexes") -->
+<!-- ``` -->
+
+What about Strain?
+
+```{r}
+beta <- betadisper(finalPhyseq.prop.dist.bc, finalPhyseq.meta$Strain)
+permutest(beta)
+```
+
+Significant hit, so some heteroskedascity.
+
+```{r}
+plot(beta, main = "beta dispersion estimates between strains")
+```
+
+I suspect the big difference here is based on two factors: 1) unbalanced groups, and 2) there are two samples which always seem to be significantly different.
+
+## ANOSIM
+
+Let's run ANOSIM on the individual factors.  This test seems to have odd issues with stratification with some factors, but as stratifying based on tissue or subject ID seems to have very little effect on significance I will leave it out here.
+
+```{r }
+finalPhyseq.prop.ano <- anosim(finalPhyseq.prop.dist.bc, finalPhyseq.meta$Strain)
+finalPhyseq.prop.ano
+```
+
+```{r }
+plot(finalPhyseq.prop.ano, cex.axis = 0.6)
+```
+
+<!-- # Differential abundance analysis -->
+
+<!-- Run DESeq2. -->
+
+<!-- ```{r } -->
+<!-- library(DESeq2) -->
+<!-- sd <- sample_data(physeq.prev) -->
+<!-- sd$Strain <- relevel(sd$Strain, "C57BL/6") -->
+<!-- sd$Sex <- relevel(sd$Sex, "M") -->
+<!-- sd$Group <- paste(sd$Strain, sd$Sex, sep = ".") |> make.names() |> factor() -->
+<!-- sample_data(physeq.prev) <- sd -->
+
+<!-- design <- model.matrix(~ 0 + Group, data = as(sd, "data.frame")) -->
+
+<!-- finalPhyseq.adds = phyloseq_to_deseq2(physeq.prev, ~ 0 + Group) -->
+
+<!-- finalPhyseq.adds = DESeq(finalPhyseq.adds,  -->
+<!--                          test="Wald",  -->
+<!--                          fitType="local", -->
+<!--                          sfType = "poscounts", -->
+<!--                          quiet = TRUE -->
+<!--                          ) -->
+<!-- ``` -->
+
+<!-- What are the results names? -->
+
+<!-- ```{r} -->
+<!-- resultsNames(finalPhyseq.adds) -->
+<!-- ``` -->
+
+<!-- ```{r } -->
+<!-- generateContrastResults <- function(deseq, contrast, physeq, file = "results.txt") { -->
+<!--   res = results(deseq,  -->
+<!--               cooksCutoff = FALSE,  -->
+<!--               contrast = contrast, -->
+<!--               test = "Wald" -->
+<!--               ) -->
+<!--   res = cbind(as(res, "data.frame"), as(tax_table(physeq)[rownames(res), ], "matrix")) -->
+
+<!--   write.table(res, file, row.names = TRUE, col.names = NA, sep = "\t") -->
+<!--   return(res) -->
+<!-- } -->
+
+<!-- plotDESeq2Res <- function(res) { -->
+<!--   sigtab <- res[which(res$padj < 0.05), ] -->
+<!--   scale_fill_discrete <- function(palname = "Set1", ...) { -->
+<!--       scale_fill_brewer(palette = palname, ...) -->
+<!--   } -->
+
+<!--   x = tapply(sigtab$log2FoldChange, sigtab$Phylum, function(x) max(x)) -->
+<!--   x = sort(x, TRUE) -->
+<!--   sigtab$Phylum = factor(as.character(sigtab$Phylum), levels=names(x)) -->
+
+<!--   # Family order -->
+<!--   x = tapply(sigtab$log2FoldChange, sigtab$Family, function(x) max(x)) -->
+<!--   x = sort(x, TRUE) -->
+<!--   sigtab$Family = factor(as.character(sigtab$Family), levels=names(x)) -->
+<!--   p <- ggplot(sigtab, aes(x=Family, y=log2FoldChange, color=Phylum)) + geom_point(size=6) + -->
+<!--     theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust=0.5)) -->
+<!--   return(p) -->
+<!-- } -->
+<!-- ``` -->
+
+<!-- Pull out specific contrast. The numbers in the contrast vector below correspond to the different test results we generated:  -->
+
+<!-- ## C57BL.6 - F vs M -->
+
+<!-- ```{r } -->
+<!-- # [1] "GroupC57BL.6.F"  "GroupC57BL.6.M"  "GroupSHP.T58A.F" "GroupSHP.T58A.M" -->
+<!-- res.test = generateContrastResults(deseq = finalPhyseq.adds,  -->
+<!--                               contrast = c("Group", "C57BL.6.F", "C57BL.6.M"), -->
+<!--                               physeq = physeq.prev, -->
+<!--                               file = "../results/DESeq2/Overall-C57BL.6-FvsM.txt" -->
+<!-- ) -->
+<!-- dim(res.test[which(res.test$padj <= 0.05), ]) -->
+<!-- ``` -->
+
+<!-- The first number above corresponds to the number of significant taxa (p <= 0.05) in this test result. -->
+
+<!-- We can plot this w/ a DESeq function... -->
+
+<!-- ```{r } -->
+<!-- plotDESeq2Res(res.test) -->
+<!-- ``` -->
+
+<!-- ## SHP-T58A - F vs M -->
+
+<!-- ```{r } -->
+<!-- # [1] "GroupC57BL.6.F"  "GroupC57BL.6.M"  "GroupSHP.T58A.F" "GroupSHP.T58A.M" -->
+<!-- res.test = generateContrastResults(deseq = finalPhyseq.adds,  -->
+<!--                               contrast = c("Group", "SHP.T58A.F", "SHP.T58A.M"), -->
+<!--                               physeq = physeq.prev, -->
+<!--                               file = "../results/DESeq2/Overall-SHP.T58A-FvsM.txt" -->
+<!-- ) -->
+<!-- dim(res.test[which(res.test$padj <= 0.05), ]) -->
+<!-- ``` -->
+
+<!-- ```{r } -->
+<!-- plotDESeq2Res(res.test) -->
+<!-- ``` -->
+
+<!-- ## Males - SHP.T58A vs C57BL.6 -->
+
+<!-- ```{r } -->
+<!-- # [1] "GroupC57BL.6.F"  "GroupC57BL.6.M"  "GroupSHP.T58A.F" "GroupSHP.T58A.M" -->
+<!-- res.test = generateContrastResults(deseq = finalPhyseq.adds,  -->
+<!--                               contrast = c("Group", "SHP.T58A.M", "C57BL.6.M"), -->
+<!--                               physeq = physeq.prev, -->
+<!--                               file = "../results/DESeq2/Overall-Male-SHP.T58AvsC57BL.6.txt" -->
+<!-- ) -->
+<!-- dim(res.test[which(res.test$padj <= 0.05), ]) -->
+<!-- ``` -->
+
+<!-- ```{r } -->
+<!-- plotDESeq2Res(res.test) -->
+<!-- ``` -->
+
+<!-- ## Females - SHP.T58A vs C57BL.6 -->
+
+<!-- ```{r } -->
+<!-- # [1] "GroupC57BL.6.F"  "GroupC57BL.6.M"  "GroupSHP.T58A.F" "GroupSHP.T58A.M" -->
+<!-- res.test = generateContrastResults(deseq = finalPhyseq.adds,  -->
+<!--                               contrast = c("Group", "SHP.T58A.F", "C57BL.6.F"), -->
+<!--                               physeq = physeq.prev, -->
+<!--                               file = "../results/DESeq2/Overall-Female-SHP.T58AvsC57BL.6.txt" -->
+<!-- ) -->
+<!-- dim(res.test[which(res.test$padj <= 0.05), ]) -->
+<!-- ``` -->
+
+<!-- ```{r } -->
+<!-- plotDESeq2Res(res.test) -->
+<!-- ``` -->
+
+<!-- <!-- We can also plot this w/ ggplot so we can have more control over the image. These codes will have to be run for each test. --> -->
+
+<!-- <!-- ```{r signif_Overall1} --> -->
+<!-- <!-- sigtab <- res.test[which(res.test$padj < 0.05), ] --> -->
+<!-- <!-- scale_fill_discrete <- function(palname = "Set1", ...) { --> -->
+<!-- <!--     scale_fill_brewer(palette = palname, ...) --> -->
+<!-- <!-- } --> -->
+<!-- <!-- ``` --> -->
+
+
+<!-- <!-- The following may need to be run in the console so that it runs without errors. Run the first chunk first. Adjust the image size to preference, and then run the ggsave() line to save it. --> -->
+
+<!-- <!-- ```{r Genus plot} --> -->
+<!-- <!-- # Genus order --> -->
+<!-- <!-- x = tapply(sigtab$log2FoldChange, sigtab$Genus, function(x) max(x)) --> -->
+<!-- <!-- x = sort(x, TRUE) --> -->
+<!-- <!-- sigtab$Genus = factor(as.character(sigtab$Genus), levels=names(x)) --> -->
+<!-- <!-- ggplot(sigtab, aes(x=Genus, y=log2FoldChange, color=Phylum, size = 9)) + geom_point(size=4) + --> -->
+<!-- <!--   theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust=0.5, size = 8)) --> -->
+<!-- <!-- ``` --> -->
+
+<!-- <!-- ```{r} --> -->
+<!-- <!-- ggsave("S_vs_PS-Treatment-logfoldchange-Genus.png", path = "./results/") --> -->
+<!-- <!-- ``` --> -->
+
+
+<!-- <!-- ```{r Family plot} --> -->
+<!-- <!-- # Family order --> -->
+<!-- <!-- x = tapply(sigtab$log2FoldChange, sigtab$Family, function(x) max(x)) --> -->
+<!-- <!-- x = sort(x, TRUE) --> -->
+<!-- <!-- sigtab$Family = factor(as.character(sigtab$Family), levels=names(x)) --> -->
+<!-- <!-- ggplot(sigtab, aes(x=Family, y=log2FoldChange, color=Phylum, size = 10)) + geom_point(size=5) + --> -->
+<!-- <!--   theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust=0.5, size = 10)) --> -->
+<!-- <!-- ``` --> -->
+
+<!-- <!-- ```{r} --> -->
+<!-- <!-- ggsave("S_vs_PS-Treatment-logfoldchange-Family.png", path = "./results/") --> -->
+<!-- <!-- ``` --> -->
+
+
+<!-- <!-- ```{r Species plot} --> -->
+<!-- <!-- # Species order --> -->
+<!-- <!-- x = tapply(sigtab$log2FoldChange, sigtab$Species, function(x) max(x)) --> -->
+<!-- <!-- x = sort(x, TRUE) --> -->
+<!-- <!-- sigtab$Species = factor(as.character(sigtab$Species), levels=names(x)) --> -->
+<!-- <!-- ggplot(sigtab, aes(x=Species, y=log2FoldChange, color=Phylum, size = 10)) + geom_point(size=5) + --> -->
+<!-- <!--   theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust=0.5, size = 10)) --> -->
+<!-- <!-- ``` --> -->
+
+<!-- <!-- ```{r} --> -->
+<!-- <!-- ggsave("S_vs_PS-Treatment-logfoldchange-Species.png", path = "./results/") --> -->
+<!-- <!-- ``` --> -->
+
+
+<!-- <!-- Add Genus + Species column  --> -->
+<!-- <!-- ```{r} --> -->
+<!-- <!-- sigtab$GeneSpecies <- paste(sigtab$Genus,sigtab$Species) --> -->
+<!-- <!-- ``` --> -->
+
+<!-- <!-- ```{r Genus & Species plot} --> -->
+<!-- <!-- # Genus & Species order --> -->
+<!-- <!-- x = tapply(sigtab$log2FoldChange, sigtab$GeneSpecies, function(x) max(x)) --> -->
+<!-- <!-- x = sort(x, TRUE) --> -->
+<!-- <!-- sigtab$Species = factor(as.character(sigtab$GeneSpecies), levels=names(x)) --> -->
+<!-- <!-- ggplot(sigtab, aes(x=GeneSpecies, y=log2FoldChange, color=Phylum, size = 8)) + geom_point(size=5) + --> -->
+<!-- <!--   theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust=0.5, size = 8)) --> -->
+<!-- <!-- ``` --> -->
+
+<!-- <!-- ```{r} --> -->
+<!-- <!-- ggsave("PS_DvsC-Treatment-logfoldchange-Genus_Species.png", path = "./results/") --> -->
+<!-- <!-- ``` --> -->
+
+
+
+<!-- <!-- # Heatmap of just pathogenic and benificial taxa --> -->
+
+<!-- <!-- Investigate present pathogenic and beneficial taxa so that I can make a list of OTUs --> -->
+<!-- <!-- ```{r} --> -->
+<!-- <!-- uniq.tax <- tax_table(physeq.prev)[,5:7]  --> -->
+<!-- <!-- uniq.tax[as.character(uniq.tax[,2]) == 'Treponema',] --> -->
+<!-- <!-- ``` --> -->
+
+<!-- <!-- Import beneficial and pathogenic OTU lists --> -->
+<!-- <!-- ```{r} --> -->
+<!-- <!-- bene_taxa <- read.csv("src/Cann_beneficial_taxa.txt", header = TRUE, sep = "\t") --> -->
+<!-- <!-- patho_taxa <- read.csv("src/Cann_pathogenic_taxa.txt", header = TRUE, sep = "\t") --> -->
+<!-- <!-- physeq.heatp <- prune_taxa(patho_taxa$taxa_id, physeq.prev) --> -->
+<!-- <!-- physeq.heatb <- prune_taxa(bene_taxa$taxa_id, physeq.prev) --> -->
+<!-- <!-- ``` --> -->
+
+<!-- <!-- Sample order --> -->
+<!-- <!-- ```{r} --> -->
+<!-- <!-- ord <- c("113",	"114",	"115",	"116",	"161",	"162",	"163",	"164",	"3",	"4",	"7",	"8",	"126",	"127",	"172",	"173",	"131",	"133",	"135",	"136",	"177",	"179",	"181",	"182",	"140",	"144",	"147",	"148",	"186",	"190",	"193",	"194",	"152",	"154",	"157",	"160",	"196",	"198",	"201",	"204") --> -->
+<!-- <!-- ``` --> -->
+
+<!-- <!-- # Genus-level heatmaps --> -->
+<!-- <!-- ```{r} --> -->
+<!-- <!-- #Agglomerate taxa and species level to remove redundancy --> -->
+<!-- <!-- physeq.heatp.glom <- tax_glom(physeq.heatp, taxrank = "Genus", NArm = FALSE) --> -->
+<!-- <!-- physeq.heatb.glom <- tax_glom(physeq.heatb, taxrank = "Genus", NArm = FALSE) --> -->
+
+<!-- <!-- # Genus is not NA --> -->
+<!-- <!-- no.na.p <- !is.na(tax_table(physeq.heatp.glom)[,"Genus"]) --> -->
+<!-- <!-- no.na.b <- !is.na(tax_table(physeq.heatb.glom)[,"Genus"]) --> -->
+
+<!-- <!-- #Genus level in beneficial has a couple NAs that need to be renamed to Family --> -->
+<!-- <!-- tax_table(physeq.heatb.glom)[!no.na.b][,"Genus"] = paste("[Family]", tax_table(physeq.heatb.glom)[!no.na.b][,"Family"]) --> -->
+<!-- <!-- ``` --> -->
+
+<!-- <!-- Pathogenic heatmap --> -->
+<!-- <!-- ```{r} --> -->
+<!-- <!-- p <- plot_heatmap(physeq.heatp.glom, --> -->
+<!-- <!--                   method = "PCoA", --> -->
+<!-- <!--                   distance = "bray", --> -->
+<!-- <!--                   taxa.label = "Genus", --> -->
+<!-- <!--                   sample.label = "Sample", --> -->
+<!-- <!--                   sample.order = ord, --> -->
+<!-- <!--                   taxa.order = "Genus", --> -->
+<!-- <!--                   trans = log_trans(2), --> -->
+<!-- <!--                   title = "Pathogenic Organisms") --> -->
+<!-- <!-- p --> -->
+
+<!-- <!-- #ggsave("pathogenic-genus-level-heatmap.pdf", path = "./results/", device = pdf, width = 8.5, height = 3.5, units = "in") --> -->
+<!-- <!-- ``` --> -->
+
+<!-- <!-- Beneficial heatmap --> -->
+<!-- <!-- ```{r} --> -->
+<!-- <!-- p <- plot_heatmap(physeq.heatb.glom, --> -->
+<!-- <!--                   method = "PCoA", --> -->
+<!-- <!--                   distance = "bray", --> -->
+<!-- <!--                   taxa.label = "Genus", --> -->
+<!-- <!--                   sample.label = "Sample", --> -->
+<!-- <!--                   sample.order = ord, --> -->
+<!-- <!--                   taxa.order = "Genus", --> -->
+<!-- <!--                   trans = log_trans(2), --> -->
+<!-- <!--                   title = "Beneficial Organisms") --> -->
+<!-- <!-- p --> -->
+
+<!-- <!-- #ggsave("beneficial-genus-level-heatmap.pdf", path = "./results/", device = pdf, width = 8.5, height = 8.5, units = "in") --> -->
+<!-- <!-- ``` --> -->
+
+
+
+<!-- <!-- # Species-level heatmaps --> -->
+<!-- <!-- ```{r} --> -->
+<!-- <!-- #Agglomerate taxa and species level to remove redundancy --> -->
+<!-- <!-- physeq.heatp.glom <- tax_glom(physeq.heatp, taxrank = "Species", NArm = FALSE) --> -->
+<!-- <!-- physeq.heatb.glom <- tax_glom(physeq.heatb, taxrank = "Species", NArm = FALSE) --> -->
+
+<!-- <!-- #Replace "Unclassified" and NA species w/ "sp." --> -->
+<!-- <!-- tax_table(physeq.heatp.glom)[,"Species"][tax_table(physeq.heatp.glom)[,"Species"] == "Unclassified"] <- "sp." --> -->
+<!-- <!-- tax_table(physeq.heatp.glom)[,"Species"][is.na(tax_table(physeq.heatp.glom)[,"Species"])] <- "sp." --> -->
+<!-- <!-- tax_table(physeq.heatb.glom)[,"Species"][tax_table(physeq.heatb.glom)[,"Species"] == "Unclassified"] <- "sp." --> -->
+<!-- <!-- tax_table(physeq.heatb.glom)[,"Species"][is.na(tax_table(physeq.heatb.glom)[,"Species"])] <- "sp." --> -->
+
+<!-- <!-- # Replace Species with full name --> -->
+<!-- <!-- tax_table(physeq.heatp.glom)[no.na.p][,"Species"] = paste(tax_table(physeq.heatp.glom)[no.na.p][,"Genus"], tax_table(physeq.heatp.glom)[no.na.p][,"Species"]) --> -->
+<!-- <!-- tax_table(physeq.heatb.glom)[no.na.b][,"Species"] = paste(tax_table(physeq.heatb.glom)[no.na.b][,"Genus"], tax_table(physeq.heatb.glom)[no.na.b][,"Species"]) --> -->
+
+<!-- <!-- #Genus level has a couple NAs that need to be renamed --> -->
+<!-- <!-- tax_table(physeq.heatb.glom)[!no.na.b][,"Genus"] = paste("[Family]", tax_table(physeq.heatb.glom)[!no.na.b][,"Family"]) --> -->
+<!-- <!-- tax_table(physeq.heatb.glom)[!no.na.b][,"Species"] = paste("[Family]", tax_table(physeq.heatb.glom)[!no.na.b][,"Family"]) --> -->
+<!-- <!-- ``` --> -->
+
+<!-- <!-- Pathogenic heatmap --> -->
+<!-- <!-- ```{r} --> -->
+<!-- <!-- p <- plot_heatmap(physeq.heatp.glom, --> -->
+<!-- <!--                   method = "PCoA", --> -->
+<!-- <!--                   distance = "bray", --> -->
+<!-- <!--                   taxa.label = "Species", --> -->
+<!-- <!--                   sample.label = "Sample", --> -->
+<!-- <!--                   sample.order = ord, --> -->
+<!-- <!--                   taxa.order = "Genus", --> -->
+<!-- <!--                   trans = log_trans(2), --> -->
+<!-- <!--                   title = "Pathogenic Organisms") --> -->
+<!-- <!-- p --> -->
+
+<!-- <!-- #ggsave("pathogenic-species-level-heatmap.pdf", path = "./results/", device = pdf, width = 8.5, height = 5, units = "in") --> -->
+<!-- <!-- ``` --> -->
+
+<!-- <!-- Beneficial heatmap --> -->
+<!-- <!-- ```{r} --> -->
+<!-- <!-- p <- plot_heatmap(physeq.heatb.glom, --> -->
+<!-- <!--                   method = "PCoA", --> -->
+<!-- <!--                   distance = "bray", --> -->
+<!-- <!--                   taxa.label = "Species", --> -->
+<!-- <!--                   sample.label = "Sample", --> -->
+<!-- <!--                   sample.order = ord, --> -->
+<!-- <!--                   taxa.order = "Genus", --> -->
+<!-- <!--                   trans = log_trans(2), --> -->
+<!-- <!--                   title = "Beneficial Organisms") --> -->
+<!-- <!-- p --> -->
+
+<!-- <!-- #ggsave("beneficial-species-level-heatmap.pdf", path = "./results/", device = pdf, width = 8.5, height = 8.5, units = "in") --> -->
+<!-- <!-- ``` --> -->
+
+
+
+
+<!-- <!-- ## Random Forest analysis --> -->
+<!-- <!-- ```{r} --> -->
+<!-- <!-- predictors <- otu_table(physeq.prev) --> -->
+<!-- <!-- dim(predictors) --> -->
+<!-- <!-- ``` --> -->
+
+<!-- <!-- ```{r} --> -->
+<!-- <!-- # Make one column for our outcome/response variable  --> -->
+<!-- <!-- response <- as.factor(sample_data(physeq.prev)$Treatment) --> -->
+
+<!-- <!-- # Combine them into 1 data frame --> -->
+<!-- <!-- rf.data <- data.frame(response, predictors) --> -->
+<!-- <!-- ``` --> -->
+
+
+<!-- <!-- ```{r} --> -->
+<!-- <!-- library(randomForest) --> -->
+<!-- <!-- set.seed(2) --> -->
+<!-- <!-- biom.classify <- randomForest(response~.,  --> -->
+<!-- <!--                               data = rf.data,  --> -->
+<!-- <!--                               ntree = 1000) --> -->
+<!-- <!-- print(biom.classify) --> -->
+<!-- <!-- ``` --> -->
+
+<!-- <!-- ```{r, fig.width=4, fig.height=4} --> -->
+<!-- <!-- # Make a data frame with predictor names and their importance --> -->
+<!-- <!-- imp <- importance(biom.classify) --> -->
+<!-- <!-- imp <- data.frame(predictors = gsub('^X', '', rownames(imp)), imp) --> -->
+
+<!-- <!-- # Order the predictor levels by importance --> -->
+<!-- <!-- imp.sort <- arrange(imp, desc(MeanDecreaseGini)) --> -->
+
+<!-- <!-- tx.tmp <- as.data.frame(tax_table(physeq.prev)[imp.sort$predictors, ]) --> -->
+<!-- <!-- imp.sort$taxonomy <- apply( --> -->
+<!-- <!--   tx.tmp, --> -->
+<!-- <!--   1, --> -->
+<!-- <!--   function(x) paste(x[1:6], collapse=';')) --> -->
+<!-- <!-- imp.sort$taxonomy <- factor(imp.sort$taxonomy) --> -->
+<!-- <!-- imp.sort$predictors <- factor(imp.sort$predictors, levels = imp.sort$predictors) --> -->
+
+<!-- <!-- # Select the top 10 predictors --> -->
+<!-- <!-- imp.10 <- imp.sort[1:20, ] --> -->
+
+<!-- <!-- getPalette = colorRampPalette(brewer.pal(9, "Set1")) --> -->
+
+<!-- <!-- # ggplot --> -->
+<!-- <!-- p <- ggplot(imp.10, aes(x = predictors, y = MeanDecreaseGini, fill = predictors)) + --> -->
+<!-- <!--   geom_bar(stat = "identity") + --> -->
+<!-- <!--   xlab("Predictor (NCBI TaxID)") + --> -->
+<!-- <!--   scale_fill_manual(name = "Taxonomy", --> -->
+<!-- <!--                     values = getPalette(20), --> -->
+<!-- <!--                     labels = imp.10$taxonomy) + --> -->
+<!-- <!--   #theme(legend.position="left"x) --> -->
+<!-- <!--   theme(axis.text.x = element_text(size=8, angle=-45, hjust=0), --> -->
+<!-- <!--         legend.text = element_text(size=6) ) --> -->
+<!-- <!--   #coord_flip(clip = "off")  --> -->
+<!-- <!--   #scale_color_hue(labels = imp.10$taxonomy) --> -->
+<!-- <!--   #ggtitle("Most important taxa for classifying samples\n into treatment A or B") --> -->
+<!-- <!-- p --> -->
+<!-- <!-- ``` --> -->
+
+<!-- <!-- ```{r} --> -->
+<!-- <!-- # What are those OTUs? --> -->
+<!-- <!-- taxanames <- imp.10$predictors --> -->
+
+<!-- <!-- r <- taxa_names(physeq.prev) %in% taxanames --> -->
+
+<!-- <!-- as.data.frame(tax_table(physeq.prev)[r, ]) --> -->
+<!-- <!-- ``` --> -->
+
+<!-- # Save -->
+
+<!-- ```{r } -->
+<!-- saveRDS(physeq.prev, file = "../results/phyloseq.final.RDS") -->
+<!-- ``` -->
+

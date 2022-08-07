@@ -1,5 +1,5 @@
 ---
-title: "Kim 16S Initial analysis on raw data - Oct 2021"
+title: "Kim 16S analysis - Oct 2021"
 author: "Chris Fields"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
@@ -12,7 +12,7 @@ output:
 
 # Intro
 
-TODO
+Mouse study, split by treatment and sex.  For this we will focus on the male mice.
 
 # Set up
 

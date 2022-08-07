@@ -1,216 +1,43 @@
----
-title: "Kim 16S Initial analysis on raw data - Oct 2021"
-author: "Chris Fields"
-date: "`r format(Sys.time(), '%d %B, %Y')`"
-output:
-  html_document:
-    pdf_print: paged
-    fig_height: 4
-    fig_width: 6
-    toc: yes
----
+```{r, include=FALSE}
+# at some point this should be moved into bookdown
+source("common_code.R", local = knitr::knit_global())
+```
 
-# Set up 
+# Setting up the data and project
 
 Code (not shown in the report) is initialized and loaded here.  We don't include the code in the report but make this available as needed; please see the [Github repository](https://github.com/HPCBio/kim-16S-mouse-2022Feb) for this project for the final version.
 
 Data from the primary project folder should be downloaded from [here](https://uofi.box.com/s/4p1tp8tn4o64s5j8ywf9ahi7t3s9qajo) (requires permissions). Note the following assumes all data are in `2022-Feb-16S`.
 
-```{r, echo=TRUE, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+```{r, echo=FALSE}
+library(knitr)
+knitr::opts_chunk$set(echo = FALSE, include = TRUE)
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 ```
 
-```{r, include=FALSE}
-# Note that not all libraries will be needed.  Most phyloseq code uses ggplot and tidyverse internally, therefore we explicitly load here
-library(knitr)
-library(tidyverse)
-library(phyloseq)
+## Import and preprocessing
 
-# this seems to have issues with caching and phyloseq
-# library(ggtree) 
-
-# For normalization
-# library(metagenomeSeq)
-
-# phylogenetic tree input
-# library(ape)
-
-# read/modify BIOM 
-# library(biomformat)
-
-# ggplot functions for trees and dendrograms
-# library(ggdendro)
-
-# distance measures, PERMANOVA, ANOSIM
-# library(vegan)
-
-# generation of stats values for graphs
-# library(ggpubr)
-
-# normalization (CLR)
-# library(mixOmics)
-
-# to get labels2color
-# library(WGCNA)
-
-# mixed models (needs to be updated)
-# library(lme4)
-# library(lmerTest)
-# library(nlme)
-# to get post-hoc tests for mixed-model tests 
-# library(lsmeans)
-
-# sample decontamination 
-# library(decontam)
-
-# library(devtools)
-
-# needed in case we want to use ANCOM
-#library(exactRankTests)
-
-#Other libraries I added later
-##library(BiocManager)
-##BiocManager::install("microbiome")
-##library(devtools)
-##devtools::install_github("gauravsk/ranacapa")
-##devtools::install_github("hpcbio/plotly_microbiome")
-# library(plotly.microbiome)
-# library(microbiome)
-# library(ranacapa)
-
-# this is to load some extension helper code, see: https://github.com/HPCBio/phyloseq-extended
-# devtools::load_all('~/src/phyloseq-extended/')
-```
-
-```{r, include=FALSE}
-# Setting up the analysis, including adding helper functions.  The document won't include the actual code, but the functions are present in the Rmd document.  The functions here include ones to:
-options(stringsAsFactors = FALSE)
-theme_set(theme_bw())
-```
-
-
-```{r, include=FALSE}
-# Remove the tags on the taxonomic ranks, which are redundant with the column headers.
-stripTaxaTags <- function(physeq) {
-  oldMA <- as(tax_table(physeq), "matrix")
-  newMA <- apply(oldMA, 2, function(x) {sub('\\w__','', x)})
-  if (inherits(physeq, "taxonomyTable")) {
-      return(tax_table(newMA))
-  }
-  else {
-      tax_table(physeq) <- tax_table(newMA)
-      return(physeq)
-  }
-}
-```
-
-```{r }
-# Convert sequences to names (culled from https://github.com/LangilleLab/microbiome_helper/blob/master/convert_dada2_out.R) 
-
-renameTaxIds <- function(physeq, file.name="seqs.fasta") {
-  suppressMessages(require("ShortRead"))
-  seqtab.physeq <- otu_table(physeq)
-  seqs <- colnames(seqtab.physeq)
-  ids_study <- paste("seq", 1:ncol(seqtab.physeq), sep = "_")
-  seqs.dna <- ShortRead(sread = DNAStringSet(seqs), id = BStringSet(ids_study))
-  # Write out fasta file.
-  writeFasta(seqs.dna, file = file.name)
-  taxa_names(physeq) <- ids_study
-  # TODO: add the sequences back to the phyloseq instance
-  # physeq <- merge_phyloseq(physeq)
-  return(physeq)
-}
-```
-
-```{r}
-# original code: https://github.com/twbattaglia/btools/blob/master/R/estimate_pd.R
-estimate_pd <- function(phylo) {
-  # Error if input is not of class phylo
-  if(class(phylo) != "phyloseq"){
-    stop("Input file is not of class 'phyloseq'.")
-  }
-
-  # Error if no class phy_tree
-  if(!(.hasSlot(phylo, "phy_tree"))){
-    stop("Could not find tree slot in phylo object.")
-  }
-  
-  if (!require('picante')) stop("Function requires the picante library.")
-
-  # Transpose if needed
-  # Adapted from phyloseq/vegan import
-  OTU <- phyloseq::otu_table(phylo)
-  if (taxa_are_rows(OTU)) {
-    OTU <- t(OTU)
-  }
-
-  # Get matrix version of OTU table
-  otutable <- as(OTU, "matrix")
-
-  # Get phylogenetic tree from phyloseq object
-  tree <- phyloseq::phy_tree(phylo)
-
-  # Print status message
-  message("Calculating Faiths PD-index...")
-
-  # If object is greater than 10mb, then print status message
-  if(object.size(otutable) > 10000000){
-    message("This is a large object, it may take awhile...")
-  }
-
-  # Calculate Faith's PD-index
-  #
-  pdtable <- picante::pd(otutable, tree, include.root = F)
-
-  # Return data frame of results
-  return(pdtable)
-}
-```
-
-```{r}
-# CLR normalization 
-# (from McMurdie (Meth Mol Bio 2018) supplemental package)
-zero_comp = function(x){
-  if(taxa_are_rows(x)){x <- t(x)}
-  matx = otu_table(x)
-  # `zCompositions::cmultRepl` expects the samples to be in rows and OTUs to be in columns
-  matxzc = zCompositions::cmultRepl(matx, method="CZM", output="p-counts")
-  otu_table(x) <- otu_table(matxzc, taxa_are_rows = FALSE)
-  return(x)
-}
-# CLR definition
-geometric_mean = function(x){
-  exp(mean(log(x)))
-}
-clr = function(x, base=2){
-  x <- log((x / geometric_mean(x)), base)
-}
-phyloseq_CLR = function(physeq){
-  suppressMessages({physeq <- zero_comp(physeq)})
-  return(transform_sample_counts(physeq, fun = clr))
-}
-```
-
-# Import and preprocessing
-
-## Initial file input
+### Initial file input
 
 There is one run with all of the data.  Load it in along with the relevant tree and sequence data (metadata to be added).
 
 First, let's load in the newer taxonomic analysis using QIIME2.  It looks like this:
 
 ```{r}
-taxtab <- readRDS('../results/TADA/R1/Phyloseq/tax_final.md5.R1.RDS')
+taxtab <- readRDS('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/TADA/R1/Phyloseq/tax_final.md5.R1.RDS')
+
+# this is needed for some downstream steps
 taxtab[taxtab == 'Unclassified'] <- NA
 knitr::kable(head(taxtab))
 ```
 
+Object summary:
+
 ```{r}
 colnames(taxtab) <- c("Domain", "Phylum", "Class", "Order", "Family", "Genus", "Species")
-seqtab.tmp <- readRDS('../results/TADA/R1/Phyloseq/seqtab_final.md5.R1.RDS')
-tree.tmp <- read_tree('../results/TADA//R1/Plain/Trees/rooted.R1.newick')
-asvs.tmp <- Biostrings::readDNAStringSet('../results/TADA/R1/Plain/Sequences/asvs.md5.nochim.R1.fna', format = 'fasta')
+seqtab.tmp <- readRDS('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/TADA/R1/Phyloseq/seqtab_final.md5.R1.RDS')
+tree.tmp <- read_tree('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/TADA/R1/Plain/Trees/rooted.R1.newick')
+asvs.tmp <- Biostrings::readDNAStringSet('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/TADA/R1/Plain/Sequences/asvs.md5.nochim.R1.fna', format = 'fasta')
 physeq <- phyloseq(
   otu_table(seqtab.tmp, taxa_are_rows = F),
   tax_table(taxtab),
@@ -220,29 +47,30 @@ physeq <- phyloseq(
 physeq
 ```
 
-The sample names need to be cleaned up
+First few sample names to make sure they look like a simple format:
 
 ```{r}
 head(sample_names(physeq))
 ```
 
-## Load metadata
+### Load metadata
 
 Load in experimental data on samples (metadata).  Here are the first few rows:
 
 ```{r}
 library(readxl)
-tmp <- read_tsv('../Metadata/Metadata.txt')
+tmp <- read_tsv('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/Metadata/Metadata.txt')
 tmp$Strain <- factor(tmp$Strain)
 tmp$Sex <- factor(tmp$Sex)
 tmp$Replicate <- factor(tmp$Replicate)
 
 knitr::kable(head(tmp))
 ```
+
 We also read in read QC so we can layer in whether read abundance plays a role.  We need to do a bit of our own read tracking here (it's not currently in the pipeline but can be added).
 
 ```{r results="asis"}
-track <- read_tsv("../results/TADA/Plain/QC/all.readtracking.R1.txt")
+track <- read_tsv("~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/TADA/Plain/QC/all.readtracking.R1.txt")
 knitr::kable(track)
 ```
 
@@ -250,11 +78,13 @@ We see a fairly substantial drop from merging; we can possibly use just R1, but 
 
 Combine all metadata together for analysis and add back to the class.
 
-```{r}
+```{r, include=FALSE}
 tmp2 <- sample_data(right_join(tmp, track, by="SampleID"))
 sample_names(tmp2) <- tmp2$Sample
 sample_names(tmp2)
 ```
+
+Here is the sample object summary now:
 
 ```{r}
 sample_data(physeq) <- tmp2
@@ -267,15 +97,65 @@ What do the first rows look like?
 sample_data(physeq) %>% as("data.frame") %>% head %>% knitr::kable()
 ```
 
-# Save file
+## Raw composition plots
 
-```{r}
-saveRDS(physeq, '../results/physeq.raw.RDS')
+Overall compositional summary (stacked bar plots) for samples.  In this example here are the top 15 families by composition per sample, split by treatment.  We can generate a publication-quality plot depending on your need.
+
+```{r, results='asis', fig.keep='all', message = FALSE, warning = FALSE, echo = FALSE}
+ranks <- c("Class", "Order", "Family", "Genus", "Species")
+plots <- lapply(ranks, function (x) { ggplotly(phyloseq.extended::plot_composition(physeq,
+                                         taxaSet1 = NULL, 
+                                         taxaRank2 = x, 
+                                         fill = x, 
+                                         numberOfTaxa = 15))} )
+
+names(plots) <- ranks
+# Build list of outputs
+# See https://stackoverflow.com/questions/9469504/access-and-preserve-list-names-in-lapply-function for example
+
+# not sure if there is an easy way to make a function out of these.
+output <- list()
+for(rank in ranks){
+  # Header for iteration, note Rmd heading ranks and adjust accordingly
+  output[[length(output) + 1L]] <- paste0("### ", rank)
+
+  # Plot
+  output[[length(output) + 1L]] <- plots[[rank]]
+}
+
+# Render the outputs
+for(j in 1:length(output)){
+  x <- output[[j]]
+
+  if(inherits(x, "character")){
+    cat("\n")
+    cat(x)
+  } else if(inherits(x, "knitr_kable")){
+    cat("\n")
+    print(x)
+  }
+  else {
+    # print the html piece of the htmlwidgets
+    cat("\n")
+    cat(htmltools::renderTags(as_widget(x))$html)
+  }
+}
 ```
 
-# Session info
-
-```{r}
-sessionInfo()
+```{r echo=FALSE, messages=FALSE, warning=FALSE}
+# Attach the Dependencies since they do not get included with renderTags(...)$html
+deps <- lapply(
+  Filter(f = function(x){inherits(x,"htmlwidget")}, x = output),
+  function(hw){
+    htmltools::renderTags(hw)$dependencies
+  }
+)
+htmltools::attachDependencies(x = htmltools::tagList(), value = unlist(deps,recursive=FALSE))
 ```
 
+## Save file
+
+```{r}
+saveRDS(physeq, 
+        '~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/physeq.raw.RDS')
+```

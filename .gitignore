@@ -4,3 +4,5 @@ results*
 .Rproj.user*
 .Rproj.user
 *.html
+src/_book/*
+src/_bookdown_files/*

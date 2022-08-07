@@ -1,14 +1,14 @@
+# Initial filtering
+
 ```{r, include=FALSE}
 # at some point this should be moved into bookdown
-source("common_code.R", local = knitr::knit_global())
+source("~/research/biotech/young-chae_kim/2021-Fall-Microbiome/src/common_code.R", local = knitr::knit_global())
 ```
 
 ```{r}
 # Load in data
 physeq <- readRDS('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/physeq.raw.RDS')
 ```
-
-# Initial filtering 
 
 These steps remove or subset the original data by:
 
@@ -23,16 +23,18 @@ We save this file for alpha rarefaction, alpha diversity, and prevalence filteri
 
 ## Subset of data
 
-Are we focusing on one particular subset of samples?  Here we are, specifically the male samples.
+Are we focusing on one particular subset of samples?  
 
-### Male samples
+<!-- Here we are, specifically the male samples. -->
 
-Create a data set for filtering that is male-only:
+<!-- ### Male samples -->
 
-```{r}
-physeq.filtered <- subset_samples(physeq, Sex == "M")
-physeq.filtered
-```
+<!-- Create a data set for filtering that is male-only: -->
+
+<!-- ```{r} -->
+<!-- physeq.filtered <- subset_samples(physeq, Sex == "M") -->
+<!-- physeq.filtered -->
+<!-- ``` -->
 
 ## Prune out any other samples?
 
@@ -41,7 +43,7 @@ Here, we will normally prune out sample MB8, which was determined as a significa
 MB5 however also has a distinct pattern
 
 ```{r }
-physeq.filtered <- prune_samples(!(sample_names(physeq.filtered) %in% c("MB5")), physeq.filtered)
+physeq.filtered <- prune_samples(!(sample_names(physeq) %in% c("MB5", "MB8")), physeq)
 physeq.filtered
 ```
 
@@ -98,13 +100,13 @@ There aren't any non-microbial hits, so no need to remove sequences mis-classifi
 
 There are a few that unclassified across almost all ranks; anything not classified at least to a phylum level are uninformative.  We should go ahead and remove these. 
 
-How many Phylum are unassigned?
+How many Phylum are unassigned?  (TRUE means these are unassigned)
 
 ```{r }
 table(is.na(tax_table(physeq.filtered)[,'Phylum'])) %>% kable
 ```
 
-26 are not assigned at the phylum rank.  Export the sequences to a file.
+39 are not assigned at the phylum rank.  Export the unassigned sequences to a file.
 
 ```{r}
 unasn <- subset_taxa(physeq.filtered, is.na(Phylum))
@@ -322,8 +324,6 @@ plot_tree(ex0, label.tips = 'Family',
           color = 'Strain'
           )
 ```
-
-## Save file
 
 ```{r}
 saveRDS(physeq.filtered, 

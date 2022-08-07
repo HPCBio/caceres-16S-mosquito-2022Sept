@@ -1,13 +1,13 @@
+# Alpha rarefaction
+
 ```{r, include=FALSE}
 # at some point this should be moved into bookdown
-source("common_code.R", local = knitr::knit_global())
+source("~/research/biotech/young-chae_kim/2021-Fall-Microbiome/src/common_code.R", local = knitr::knit_global())
 ```
 
 ```{r}
 physeq.filtered <- readRDS('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/physeq.filtered.RDS')
 ```
-
-# Alpha rarefaction
 
 Let's check whether we're adequately capturing diversity.  This is a simple alpha rarefaction curve; here we want to see the number of taxa plateau as the counts increase.
 
@@ -30,7 +30,7 @@ Promising differences between strains.
 ```{r}
 p <- p + facet_wrap(~Sex) + ggtitle("Alpha Rarefaction by Sex")  # theme(legend.position = c(0.8, 0.2))
 
-p
+ggplotly(p)
 #ggsave("alpha-rarefaction-byTreatment-separatedbyTreatment.pdf", path = "./results/final-plots", device = pdf, width = 7.5, height = 5, units = "in")
 ```
 

@@ -1,13 +1,13 @@
 ```{r, include=FALSE}
 # at some point this should be moved into bookdown
-source("common_code.R", local = knitr::knit_global())
+source("~/research/biotech/young-chae_kim/2021-Fall-Microbiome/src/common_code.R", local = knitr::knit_global())
 ```
 
 # Setting up the data and project
 
 Code (not shown in the report) is initialized and loaded here.  We don't include the code in the report but make this available as needed; please see the [Github repository](https://github.com/HPCBio/kim-16S-mouse-2022Feb) for this project for the final version.
 
-Data from the primary project folder should be downloaded from [here](https://uofi.box.com/s/4p1tp8tn4o64s5j8ywf9ahi7t3s9qajo) (requires permissions). Note the following assumes all data are in `2022-Feb-16S`.
+Data from the primary project folder should be downloaded from [here](https://uofi.box.com/s/4p1tp8tn4o64s5j8ywf9ahi7t3s9qajo) (requires permissions). Note the following assumes all data are in `2022-Feb-16S`.  Also note that paths in the code will very likely need to be modified to rerun these (this is partly due to how the code and relevant parts of the analysis are sourced).
 
 ```{r, echo=FALSE}
 library(knitr)
@@ -95,62 +95,6 @@ What do the first rows look like?
 
 ```{r results="asis"}
 sample_data(physeq) %>% as("data.frame") %>% head %>% knitr::kable()
-```
-
-## Raw composition plots
-
-Overall compositional summary (stacked bar plots) for samples.  In this example here are the top 15 families by composition per sample, split by treatment.  We can generate a publication-quality plot depending on your need.
-
-```{r, results='asis', fig.keep='all', message = FALSE, warning = FALSE, echo = FALSE}
-ranks <- c("Class", "Order", "Family", "Genus", "Species")
-plots <- lapply(ranks, function (x) { ggplotly(phyloseq.extended::plot_composition(physeq,
-                                         taxaSet1 = NULL, 
-                                         taxaRank2 = x, 
-                                         fill = x, 
-                                         numberOfTaxa = 15))} )
-
-names(plots) <- ranks
-# Build list of outputs
-# See https://stackoverflow.com/questions/9469504/access-and-preserve-list-names-in-lapply-function for example
-
-# not sure if there is an easy way to make a function out of these.
-output <- list()
-for(rank in ranks){
-  # Header for iteration, note Rmd heading ranks and adjust accordingly
-  output[[length(output) + 1L]] <- paste0("### ", rank)
-
-  # Plot
-  output[[length(output) + 1L]] <- plots[[rank]]
-}
-
-# Render the outputs
-for(j in 1:length(output)){
-  x <- output[[j]]
-
-  if(inherits(x, "character")){
-    cat("\n")
-    cat(x)
-  } else if(inherits(x, "knitr_kable")){
-    cat("\n")
-    print(x)
-  }
-  else {
-    # print the html piece of the htmlwidgets
-    cat("\n")
-    cat(htmltools::renderTags(as_widget(x))$html)
-  }
-}
-```
-
-```{r echo=FALSE, messages=FALSE, warning=FALSE}
-# Attach the Dependencies since they do not get included with renderTags(...)$html
-deps <- lapply(
-  Filter(f = function(x){inherits(x,"htmlwidget")}, x = output),
-  function(hw){
-    htmltools::renderTags(hw)$dependencies
-  }
-)
-htmltools::attachDependencies(x = htmltools::tagList(), value = unlist(deps,recursive=FALSE))
 ```
 
 ## Save file

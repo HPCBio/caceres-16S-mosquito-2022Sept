@@ -1,6 +1,6 @@
 ```{r, include=FALSE}
 # at some point this should be moved into bookdown
-source("common_code.R", local = knitr::knit_global())
+source("~/research/biotech/young-chae_kim/2021-Fall-Microbiome/src/common_code.R", local = knitr::knit_global())
 ```
 
 ```{r}
@@ -83,10 +83,3 @@ plots <- lapply(c('Chao1', 'Shannon', 'Simpson', 'InvSimpson', 'Observed', 'PD')
 ```
 
 Not a lot of samples but the Shannon looks about right (disregarding the obvious outlier)
-
-<!-- # Save point -->
-
-<!-- ```{r } -->
-<!-- saveRDS(physeq.filtered, file = "../results/phyloseq.filtered.alphadiv.RDS") -->
-<!-- ``` -->
-

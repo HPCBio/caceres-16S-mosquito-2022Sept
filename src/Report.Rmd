@@ -2,39 +2,11 @@
 title: "Kim 16S analysis"
 author: "Chris Fields"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
+site: "bookdown::bookdown_site"
 output:
-  html_document:
-    pdf_print: paged
-    fig_height: 4
-    fig_width: 6
-    toc: yes
+  bookdown::html_book: default
 ---
 
-```{r, include=FALSE}
-# at some point this should be moved into bookdown
-source("common_code.R", local = knitr::knit_global())
-```
+# Introduction
 
-```{r, child = "InitialSetup.Rmd" }
-```
-
-```{r, child = "Filtering.Rmd"}
-```
-
-```{r, child = "AlphaRarefaction.Rmd"}
-```
-
-```{r, child = "AlphaDiversity.Rmd" }
-```
-
-```{r, child = "PrevalenceFiltering.Rmd" }
-```
-
-```{r, child = "BetaDiversity.Rmd" }
-```
-
-<!-- ```{r, child = "DiffAbundance.Rmd" } -->
-<!-- ``` -->
-
-```{r, child = "SessionInfo.Rmd"}
-```
+This workbook describes the analysis of microbiome samples from male and femal mice lines.

@@ -1,6 +1,5 @@
 ```{r, include=FALSE}
-# at some point this should be moved into bookdown
-source("common_code.R", local = knitr::knit_global())
+source("~/research/biotech/young-chae_kim/2021-Fall-Microbiome/src/common_code.R", local = knitr::knit_global())
 ```
 
 ```{r}
@@ -96,7 +95,7 @@ hist(log(phy_tree(physeq.filtered)$edge.length),
 
 #### Clip out long branches
 
-There are a few long branches that we need to check
+There are a few long branches that we need to check.  You have to zoom into the right a bit and look at the frequencies accordingly:
 
 ```{r PrevalenceFiltering-14.B}
 tmp <- phy_tree(physeq.filtered)
@@ -111,13 +110,7 @@ p <- treeTips %>%
   ggplot( aes(x=Tip.Length, fill = "black")) +
   geom_histogram( color="#e9ecef", alpha=0.6, position = 'identity', bins = 100)
 
-ggplotly(p)
-```
-
-You have to zoom into the right a bit and look at the frequencies accordingly:
-
-```{r}
-p + xlim(0.1, 1) + ylim(0,10)
+ggplotly(p + xlim(0.1, 1) + ylim(0,10))
 ```
 
 Several stand out with very long tip lengths. What are they?
@@ -345,12 +338,7 @@ p
 
 This retain the majority of data (~90% or so)  We can also try moving the agglomeration step *after* prevalence filtering, though this doesn't seem to make a significant difference.
 
-## Save prevalence filtered data
-
-We'll save at this stage, and then reload the data for diversity analysis and differential abundance.
-
 ```{r PrevalenceFiltering-35 }
-
 saveRDS(physeq.prev, file = "~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/phyloseq.prevfiltered.RDS")
 ```
 

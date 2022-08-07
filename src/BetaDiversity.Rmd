@@ -1,28 +1,14 @@
 ```{r, include=FALSE}
-# at some point this should be moved into bookdown
-source("common_code.R", local = knitr::knit_global())
+source("~/research/biotech/young-chae_kim/2021-Fall-Microbiome/src/common_code.R", local = knitr::knit_global())
 ```
 
 ```{r}
 physeq.prev <- readRDS('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/phyloseq.prevfiltered.RDS')
 ```
 
-# Basic composition plot on agglomerated data
-
-```{r }
-p <- phyloseq.extended::plot_composition(physeq.prev,
-                      numberOfTaxa = 15,
-                      taxaSet1 = NULL,
-                      fill = "Family")
-p1 <- p + facet_wrap(~Strain, scales = "free_x", nrow = 1)
-p1
-```
-
-Interesting overall shifts, esp in MB6-7
-
 # Beta diversity
 
-Initial beta diversity heatmap on the glommed samples information. MB8 is causing some issues here so we skip this
+Initial beta diversity heatmap on the glommed samples information. 
 
 ```{r }
 p <- plot_heatmap(physeq.prev,
@@ -36,7 +22,7 @@ p
 
 ## Relative proportion
 
-Transform data to relative proportions (no prior added).  We may want the option to change this later.
+Transform data to relative proportions (no prior added).  We have the option to change this later.
 
 ```{r }
 #All samples
@@ -44,9 +30,9 @@ physeq.prop <- transform_sample_counts(physeq.prev, function(x) x/sum(x) )
 sample_data(physeq.prop)$SampleSums <- sample_sums(physeq.prev)
 ```
 
-## CLR normalization, McMurdie
+<!-- ## CLR normalization, McMurdie -->
 
-Transform data using CLR (from McMurdie (Meth Mol Bio 2018) supplemental package).  
+<!-- Transform data using CLR (from McMurdie (Meth Mol Bio 2018) supplemental package).   -->
 
 ```{r }
 # # copy instance and replace raw counts with CLR-normalized counts
@@ -58,9 +44,9 @@ Transform data using CLR (from McMurdie (Meth Mol Bio 2018) supplemental package
 # digesta.clr <- phyloseq_CLR(digesta.prev)
 ```
 
-## CLR normalization, mixOmics
+<!-- ## CLR normalization, mixOmics -->
 
-CLR from `mixOmics`.
+<!-- CLR from `mixOmics`. -->
 
 ```{r }
 # # get counts
@@ -98,9 +84,8 @@ p1 = plot_ordination(physeq.active,
                      type="samples",
                      color="Strain",
                      shape = "Sex",
-                     label = "SampleID",
                      title="Samples") + geom_point(size = 2.5)
-p1 + ggtitle("PCoA, Bray Curtis distance") 
+ggplotly(p1 + ggtitle("PCoA, Bray Curtis distance"), tooltip = c("Sex", "Strain", "Replicate") )
 #+  scale_fill_viridis_d()
 ```
 
@@ -112,7 +97,7 @@ p1 <- plot_ordination(physeq.active,
                      label="SampleID",
                      title="Samples") + geom_point(size = 2.5) +
   ggtitle("PCoA, Bray Curtis distance") 
-p1
+ggplotly(p1)
 ```
 
 Nothing odd here. 

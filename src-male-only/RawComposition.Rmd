@@ -1,0 +1,68 @@
+```{r, include=FALSE}
+# at some point this should be moved into bookdown
+source("~/research/biotech/young-chae_kim/2021-Fall-Microbiome/src/common_code.R", local = knitr::knit_global())
+```
+
+```{r}
+physeq <- readRDS('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/physeq.raw.RDS')
+```
+
+# Composition plots (unfiltered data)
+
+Overall compositional summary (stacked bar plots) for all samples.  In this example here are the top 15 families by composition per sample, split by treatment.  Note again that most can be classified to the family or order rank, but genus and species ranks see few reliable assignments.
+
+```{r, results='asis', fig.keep='all', message = FALSE, warning = FALSE, echo = FALSE}
+ranks <- c("Class", "Order", "Family", "Genus", "Species")
+plots <- lapply(ranks, function (x) { 
+  p <- phyloseq.extended::plot_composition(physeq,
+                                         taxaSet1 = NULL, 
+                                         taxaRank2 = x, 
+                                         fill = x, 
+                                         numberOfTaxa = 15) + 
+    facet_wrap(~Sex, scales = "free_x", nrow = 1)
+  ggplotly(p)}
+  )
+
+names(plots) <- ranks
+
+# Build list of outputs
+# See https://stackoverflow.com/questions/9469504/access-and-preserve-list-names-in-lapply-function for example
+# not sure if there is an easy way to make a function out of these.
+output <- list()
+for(rank in ranks){
+  # Header for iteration, note Rmd heading ranks and adjust accordingly
+  output[[length(output) + 1L]] <- paste0("## ", rank)
+
+  # Plot
+  output[[length(output) + 1L]] <- plots[[rank]]
+}
+
+# Render the outputs
+for(j in 1:length(output)){
+  x <- output[[j]]
+
+  if(inherits(x, "character")){
+    cat("\n")
+    cat(x)
+  } else if(inherits(x, "knitr_kable")){
+    cat("\n")
+    print(x)
+  }
+  else {
+    # print the html piece of the htmlwidgets
+    cat("\n")
+    cat(htmltools::renderTags(as_widget(x))$html)
+  }
+}
+```
+
+```{r echo=FALSE, messages=FALSE, warning=FALSE}
+# Attach the Dependencies since they do not get included with renderTags(...)$html
+deps <- lapply(
+  Filter(f = function(x){inherits(x,"htmlwidget")}, x = output),
+  function(hw){
+    htmltools::renderTags(hw)$dependencies
+  }
+)
+htmltools::attachDependencies(x = htmltools::tagList(), value = unlist(deps,recursive=FALSE))
+```

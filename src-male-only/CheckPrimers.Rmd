@@ -1,0 +1,101 @@
+---
+title: "PrimerCheck"
+author: "Chris Fields, Jessica Holmes"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    pdf_print: paged
+    fig_height: 4
+    fig_width: 6
+    toc: yes
+---
+
+# Intro
+
+Check over presence of primers in PacBio reads
+
+# Set up
+
+```{r, echo=TRUE, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+```
+
+```{r, include=FALSE}
+# Note that not all libraries will be needed.  Most phyloseq code uses ggplot and tidyverse internally, therefore we explicitly load here
+library(knitr)
+library(tidyverse)
+library(dada2)
+library(ShortRead)
+library(Biostrings)
+#library(devtools)
+```
+
+# Check FASTQ files
+
+This is some test code to see if we need to run trimming on the raw data.  We will check for the following primer pair. 
+
+PacBio standard 16S:
+
+```
+>PacBio16SF
+AGRGTTYGATYMTGGCTCAG	
+>PacBio16SR
+RGYTACCTTGTTACGACTT
+```
+
+Shoreline StrainID:
+
+```
+>StrainID16SFor
+AGRRTTYGATYHTDGYTYAG
+>StrainID23SRev
+AGTACYRHRARGGAANGR
+```
+
+We can use the (code that Ben uses for the ITS checks)[http://benjjneb.github.io/dada2/ITS_workflow.html] to assist here:
+
+```{r}
+allOrients <- function(primer) {
+    # Create all orientations of the input sequence
+    require(Biostrings)
+    dna <- DNAString(primer)  # The Biostrings works w/ DNAString objects rather than character vectors
+    orients <- c(Forward = dna, RevComp = reverseComplement(dna))
+    return(sapply(orients, toString))  # Convert back to character vector
+}
+
+primerHits <- function(primer, fn) {
+    # Counts number of reads in which the primer is found
+    nhits <- vcountPattern(primer, sread(readFastq(fn)), fixed = FALSE)
+    return(sum(nhits > 0))
+}
+```
+
+### Load the FASTQ files
+
+```{r}
+fns <- sort(list.files("../RawData", pattern = ".fastq.gz", full.names = TRUE))
+fns
+```
+
+### StrainID primers
+
+```{r}
+FWD <- "AGRRTTYGATYHTDGYTYAG"
+REV <- "AGTACYRHRARGGAANGR"
+FWD.orients <- allOrients(FWD)
+names(FWD.orients) <- paste0("FP-", names(FWD.orients))
+REV.orients <- allOrients(REV)
+names(REV.orients) <- paste0("RP-", names(REV.orients))
+FWD.orients
+```
+
+```{r}
+cts <- sapply(fns[1:4],
+              function(x) {
+                sapply(c(FWD.orients, REV.orients), primerHits, fn = x)
+              }) %>% t()
+  
+cts
+```
+

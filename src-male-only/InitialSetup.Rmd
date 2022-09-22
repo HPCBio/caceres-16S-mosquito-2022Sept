@@ -1,0 +1,105 @@
+```{r, include=FALSE}
+# at some point this should be moved into bookdown
+source("~/research/biotech/young-chae_kim/2021-Fall-Microbiome/src/common_code.R", local = knitr::knit_global())
+```
+
+# Setting up the data and project
+
+Code (not shown in the report) is initialized and loaded here.  We don't include the code in the report but make this available as needed; please see the [Github repository](https://github.com/HPCBio/kim-16S-mouse-2022Feb) for this project for the final version.
+
+Data from the primary project folder should be downloaded from [here](https://uofi.box.com/s/4p1tp8tn4o64s5j8ywf9ahi7t3s9qajo) (requires permissions). Note the following assumes all data are in `2022-Feb-16S`.  Also note that paths in the code will very likely need to be modified to rerun these (this is partly due to how the code and relevant parts of the analysis are sourced).
+
+```{r, echo=FALSE}
+library(knitr)
+knitr::opts_chunk$set(echo = FALSE, include = TRUE)
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+```
+
+## Import and preprocessing
+
+### Initial file input
+
+There is one run with all of the data.  Load it in along with the relevant tree and sequence data (metadata to be added).
+
+First, let's load in the newer taxonomic analysis using QIIME2.  It looks like this:
+
+```{r}
+taxtab <- readRDS('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/TADA/R1/Phyloseq/tax_final.md5.R1.RDS')
+
+# this is needed for some downstream steps
+taxtab[taxtab == 'Unclassified'] <- NA
+knitr::kable(head(taxtab))
+```
+
+Object summary:
+
+```{r}
+colnames(taxtab) <- c("Domain", "Phylum", "Class", "Order", "Family", "Genus", "Species")
+seqtab.tmp <- readRDS('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/TADA/R1/Phyloseq/seqtab_final.md5.R1.RDS')
+tree.tmp <- read_tree('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/TADA/R1/Plain/Trees/rooted.R1.newick')
+asvs.tmp <- Biostrings::readDNAStringSet('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/TADA/R1/Plain/Sequences/asvs.md5.nochim.R1.fna', format = 'fasta')
+physeq <- phyloseq(
+  otu_table(seqtab.tmp, taxa_are_rows = F),
+  tax_table(taxtab),
+  asvs.tmp,
+  tree.tmp)
+
+physeq
+```
+
+First few sample names to make sure they look like a simple format:
+
+```{r}
+head(sample_names(physeq))
+```
+
+### Load metadata
+
+Load in experimental data on samples (metadata).  Here are the first few rows:
+
+```{r}
+library(readxl)
+tmp <- read_tsv('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/Metadata/Metadata.txt')
+tmp$Strain <- factor(tmp$Strain)
+tmp$Sex <- factor(tmp$Sex)
+tmp$Replicate <- factor(tmp$Replicate)
+
+knitr::kable(head(tmp))
+```
+
+We also read in read QC so we can layer in whether read abundance plays a role.  We need to do a bit of our own read tracking here (it's not currently in the pipeline but can be added).
+
+```{r results="asis"}
+track <- read_tsv("~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/TADA/Plain/QC/all.readtracking.R1.txt")
+knitr::kable(track)
+```
+
+We see a fairly substantial drop from merging; we can possibly use just R1, but let's proceed with this first.
+
+Combine all metadata together for analysis and add back to the class.
+
+```{r, include=FALSE}
+tmp2 <- sample_data(right_join(tmp, track, by="SampleID"))
+sample_names(tmp2) <- tmp2$Sample
+sample_names(tmp2)
+```
+
+Here is the sample object summary now:
+
+```{r}
+sample_data(physeq) <- tmp2
+physeq
+```
+
+What do the first rows look like?
+
+```{r results="asis"}
+sample_data(physeq) %>% as("data.frame") %>% head %>% knitr::kable()
+```
+
+## Save file
+
+```{r}
+saveRDS(physeq, 
+        '~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/physeq.raw.RDS')
+```

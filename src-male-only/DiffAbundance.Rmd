@@ -1,0 +1,88 @@
+```{r, include=FALSE}
+source("~/research/biotech/young-chae_kim/2021-Fall-Microbiome/src/common_code.R", local = knitr::knit_global())
+```
+
+```{r}
+physeq.prev <- readRDS('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/phyloseq.prevfiltered.males.RDS')
+```
+
+# Differential abundance analysis
+
+Run DESeq2.
+
+```{r }
+library(DESeq2)
+sd <- sample_data(physeq.prev)
+sd$Strain <- relevel(sd$Strain, "C57BL/6")
+sd$Sex <- relevel(sd$Sex, "M")
+sd$Group <- paste(sd$Strain, sd$Sex, sep = ".") |> make.names() |> factor()
+sample_data(physeq.prev) <- sd
+
+design <- model.matrix(~ 0 + Group, data = as(sd, "data.frame"))
+
+finalPhyseq.adds = phyloseq_to_deseq2(physeq.prev, ~ 0 + Group)
+
+finalPhyseq.adds = DESeq(finalPhyseq.adds,
+                         test="Wald",
+                         fitType="local",
+                         sfType = "poscounts",
+                         quiet = TRUE
+                         )
+```
+
+What are the results names?
+
+```{r}
+resultsNames(finalPhyseq.adds)
+```
+
+```{r }
+generateContrastResults <- function(deseq, contrast, physeq, file = "results.txt") {
+  res = results(deseq,
+              cooksCutoff = FALSE,
+              contrast = contrast,
+              test = "Wald"
+              )
+  res = cbind(as(res, "data.frame"), as(tax_table(physeq)[rownames(res), ], "matrix"))
+
+  write.table(res, file, row.names = TRUE, col.names = NA, sep = "\t")
+  return(res)
+}
+
+plotDESeq2Res <- function(res) {
+  sigtab <- res[which(res$padj < 0.05), ]
+  scale_fill_discrete <- function(palname = "Set1", ...) {
+      scale_fill_brewer(palette = palname, ...)
+  }
+
+  x = tapply(sigtab$log2FoldChange, sigtab$Phylum, function(x) max(x))
+  x = sort(x, TRUE)
+  sigtab$Phylum = factor(as.character(sigtab$Phylum), levels=names(x))
+
+  # Family order
+  x = tapply(sigtab$log2FoldChange, sigtab$Family, function(x) max(x))
+  x = sort(x, TRUE)
+  sigtab$Family = factor(as.character(sigtab$Family), levels=names(x))
+  p <- ggplot(sigtab, aes(x=Family, y=log2FoldChange, color=Phylum)) + geom_point(size=6) +
+    theme(axis.text.x = element_text(angle = -90, hjust = 0, vjust=0.5))
+  return(p)
+}
+```
+
+Pull out specific contrast. The numbers in the contrast vector below correspond to the different test results we generated:
+
+## Males - SHP.T58A vs C57BL.6
+
+```{r }
+# [1] "GroupC57BL.6.F"  "GroupC57BL.6.M"  "GroupSHP.T58A.F" "GroupSHP.T58A.M"
+res.test = generateContrastResults(deseq = finalPhyseq.adds,
+                              contrast = c("Group", "SHP.T58A.M", "C57BL.6.M"),
+                              physeq = physeq.prev,
+                              file = "~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/DESeq2/Overall-Male-SHP.T58AvsC57BL.6.males.txt"
+)
+dim(res.test[which(res.test$padj <= 0.05), ])
+```
+
+```{r }
+plotDESeq2Res(res.test)
+```

@@ -1,0 +1,10 @@
+# Session
+
+```{r}
+source("~/research/biotech/young-chae_kim/2021-Fall-Microbiome/src/common_code.R", local = knitr::knit_global())
+```
+
+```{r }
+sessionInfo()
+```
+

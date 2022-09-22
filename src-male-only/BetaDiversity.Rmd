@@ -1,0 +1,177 @@
+```{r, include=FALSE}
+source("~/research/biotech/young-chae_kim/2021-Fall-Microbiome/src/common_code.R", local = knitr::knit_global())
+```
+
+```{r}
+physeq.prev <- readRDS('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/phyloseq.prevfiltered.males.RDS')
+```
+
+# Beta diversity
+
+Initial beta diversity heatmap on the glommed samples information. 
+
+```{r }
+p <- plot_heatmap(physeq.prev,
+                  method = "PCoA",
+                  distance = "bray",
+                  taxa.label = "Family",
+                  sample.label = "SampleID",
+                  trans = log_trans(2))
+p
+```
+
+## Relative proportion
+
+Transform data to relative proportions (no prior added).  We have the option to change this later.
+
+```{r }
+#All samples
+physeq.prop <- transform_sample_counts(physeq.prev, function(x) x/sum(x) )
+sample_data(physeq.prop)$SampleSums <- sample_sums(physeq.prev)
+```
+
+<!-- ## CLR normalization, McMurdie -->
+
+<!-- Transform data using CLR (from McMurdie (Meth Mol Bio 2018) supplemental package).   -->
+
+```{r }
+# # copy instance and replace raw counts with CLR-normalized counts
+# physeq.clr <- phyloseq_CLR(physeq.prev)
+# # otu_table(physeq.clr) <- otu_table(as(x, "matrix"), taxa_are_rows = FALSE)
+# physeq.clr
+# 
+# mucosa.clr <- phyloseq_CLR(mucosa.prev)
+# digesta.clr <- phyloseq_CLR(digesta.prev)
+```
+
+<!-- ## CLR normalization, mixOmics -->
+
+<!-- CLR from `mixOmics`. -->
+
+```{r }
+# # get counts
+# tmp <- as(otu_table(mucosa.prev),"matrix")
+# 
+# tmp <- tmp
+# 
+# # transpose if needed
+# if(!taxa_are_rows(mucosa.prev)) { tmp <- t(tmp)}
+# 
+# x <- logratio.transfo(tmp, logratio = 'CLR', offset = 1)
+# 
+# # copy instance and replace raw counts with CLR-normalized counts
+# mucosa.clr2 <- mucosa.prev
+# otu_table(mucosa.clr2) <- otu_table(as(x, "matrix"), taxa_are_rows = TRUE)
+# mucosa.clr2
+```
+
+## Set active instance
+
+Set the active normalization type (Prop for now)
+
+```{r}
+physeq.active <- physeq.prop
+```
+
+### Bray-Curtis
+
+```{r }
+set.seed(1234)
+
+finalPhyseq.ord <- ordinate(physeq.active, "PCoA", "bray")
+p1 = plot_ordination(physeq.active,
+                     finalPhyseq.ord,
+                     type="samples",
+                     color="Strain",
+                     shape = "Sex",
+                     title="Samples") + geom_point(size = 2.5)
+ggplotly(p1 + ggtitle("PCoA, Bray Curtis distance"))
+#+  scale_fill_viridis_d()
+```
+
+```{r }
+p1 <- plot_ordination(physeq.active,
+                     finalPhyseq.ord,
+                     type="samples",
+                     color="input",
+                     label="SampleID",
+                     title="Samples") + geom_point(size = 2.5) +
+  ggtitle("PCoA, Bray Curtis distance") 
+ggplotly(p1)
+```
+
+Nothing odd here. 
+
+### Weighted UniFrac
+
+Let's look at Weighted UniFrac
+
+```{r}
+finalPhyseq.ord <- ordinate(physeq.active, "NMDS", "wunifrac")
+p1 = plot_ordination(physeq.active,
+                     finalPhyseq.ord,
+                     type="samples",
+                     color="Strain",
+                     shape = "Sex",
+                     label = "SampleID",
+                     title="Samples") + geom_point(size = 2.5)
+#p1 + scale_color_brewer(palette="Spectral")
+ggplotly(p1)
+```
+
+## PERMANOVA
+
+Let's try PERMANOVA on this using the implementation in `vegan` (`adonis2`).
+
+```{r }
+finalPhyseq.meta <- as(sample_data(physeq.active), "data.frame")
+finalPhyseq.prop.dist.bc <- phyloseq::distance(physeq.active, method = "bray")
+```
+
+```{r}
+set.seed(12345)
+adonis2(finalPhyseq.prop.dist.bc ~ Strain,
+       data = finalPhyseq.meta)
+```
+
+<!-- Significant result using both strain and sex, with the interaction also significant. -->
+
+<!-- ```{r } -->
+<!-- beta <- betadisper(finalPhyseq.prop.dist.bc, finalPhyseq.meta$Sex) -->
+<!-- permutest(beta) -->
+<!-- ``` -->
+
+<!-- physeq.prop: Good! This suggests that any issues with heteroscedasticity aren't likely to be significant.  What does this dispersion look like? -->
+<!-- physeq.clr2: heteroscedasticity is significant. -->
+
+<!-- ```{r } -->
+<!-- plot(beta, main = "beta dispersion estimates between sexes") -->
+<!-- ``` -->
+
+What about Strain?
+
+```{r}
+beta <- betadisper(finalPhyseq.prop.dist.bc, finalPhyseq.meta$Strain)
+permutest(beta)
+```
+
+Not significant but this is also underpowered and pretty variable based on the pattern.
+
+```{r}
+plot(beta, main = "beta dispersion estimates between strains")
+```
+
+I suspect the big difference here is based on two factors: 1) unbalanced groups, and 2) there are two samples which always seem to be significantly different.
+
+## ANOSIM
+
+Let's run ANOSIM on the individual factors.  This test seems to have odd issues with stratification with some factors, but as stratifying based on tissue or subject ID seems to have very little effect on significance I will leave it out here.
+
+```{r }
+finalPhyseq.prop.ano <- anosim(finalPhyseq.prop.dist.bc, finalPhyseq.meta$Strain)
+finalPhyseq.prop.ano
+```
+
+```{r }
+plot(finalPhyseq.prop.ano, cex.axis = 0.6)
+```

@@ -3,7 +3,7 @@ source("~/research/biotech/young-chae_kim/2021-Fall-Microbiome/src/common_code.R
 ```
 
 ```{r}
-physeq.filtered <- readRDS('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/physeq.filtered.RDS')
+physeq.filtered <- readRDS('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/physeq.filtered.males.RDS')
 ```
 
 # Prevalence filtering
@@ -339,6 +339,6 @@ p
 This retain the majority of data (~90% or so)  We can also try moving the agglomeration step *after* prevalence filtering, though this doesn't seem to make a significant difference.
 
 ```{r PrevalenceFiltering-35 }
-saveRDS(physeq.prev, file = "~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/phyloseq.prevfiltered.RDS")
+saveRDS(physeq.prev, file = "~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/phyloseq.prevfiltered.males.RDS")
 ```
 

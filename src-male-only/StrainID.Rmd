@@ -1,0 +1,185 @@
+---
+title: "StrainID"
+author: "Chris Fields, Jessica Holmes"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    pdf_print: paged
+    fig_height: 4
+    fig_width: 6
+    toc: yes
+---
+
+# Intro
+
+This document focuses on incorporating the Shoreline StrainID classification into our phyloseq analysis
+
+# Set up
+
+Code (not shown in the report) is initialized and loaded here.  We don't include the code in the report but make this available as needed; please see the [Github repository](https://github.com/HPCBio/Cann-Shoreline-2021-Nov) for this project for the final version.
+
+Data from the primary project folder should be downloaded from [here](https://uofi.box.com/s/4srtwc389ryw8o3nssk0baqm1dkietsh) (requires permissions). Note the following assumes all data are in `2021-Sept-Shoreline`.
+
+```{r, echo=TRUE, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+```
+
+
+
+```{r, include=FALSE}
+# Note that not all libraries will be needed.  Most phyloseq code uses ggplot and tidyverse internally, therefore we explicitly load here
+library(knitr)
+library(tidyverse)
+library(phyloseq)
+
+# this seems to have issues with caching and phyloseq
+# library(ggtree) 
+
+# For normalization
+#library(metagenomeSeq)
+
+# phylogenetic tree input
+#library(ape)
+
+# read/modify BIOM 
+#library(biomformat)
+
+# ggplot functions for trees and dendrograms
+#library(ggdendro)
+
+# distance measures, PERMANOVA, ANOSIM
+#library(vegan)
+
+# generation of stats values for graphs
+#library(ggpubr)
+
+# normalization (CLR)
+#library(mixOmics)
+
+# to get labels2color
+#library(WGCNA)
+
+# mixed models (needs to be updated)
+#library(lme4)
+#library(lmerTest)
+#library(nlme)
+
+# sample decontamination - didn't use
+#library(decontam)
+
+# to get post-hoc tests for mixed-model tests 
+#library(lsmeans)
+library(devtools)
+
+# needed in case we want to use ANCOM
+#library(exactRankTests)
+
+#Other libraries I added later
+##library(BiocManager)
+##BiocManager::install("microbiome")
+##library(devtools)
+##devtools::install_github("gauravsk/ranacapa")
+##devtools::install_github("hpcbio/plotly_microbiome")
+#library(plotly.microbiome)
+#library(microbiome)
+#library(ranacapa)
+
+# this is to load some extension helper code, see: https://github.com/HPCBio/phyloseq-extended
+devtools::load_all('~/src/phyloseq-extended/')
+```
+
+# Load StrainID data 
+
+The output from the SBAnalyzer is a simple tab-delimited table with ASV ID and strain ID if found.  
+
+```{r}
+strainID <- read.table('../2021-Sept-Shoreline/Shoreline-Athena/taxonomy.tax', 
+                       row.names = 1, sep = "\t") |>  
+  separate(1, into = c("Domain", "Phylum", "Class", "Order", "Family", "Genus", "Species", "Strain"), sep = ";", extra = 'drop') |> 
+  as.matrix() |> tax_table()
+knitr::kable(head(strainID))
+```
+
+Load in phyloseq data that has been prevalence-filtered.
+
+```{r}
+physeq.prev <- readRDS("../results/PrevalenceFiltering/phyloseq.prevfiltered.RDS")
+taxtab.prev <- tax_table(physeq.prev)
+knitr::kable(head(taxtab.prev))
+```
+
+One current nice side effect of switching out the taxonomy table is that this filters out those taxa that don't match with the taxa names in the phyloseq object. We'll make a copy and switch out the table in the copy only, so we can compare these
+
+```{r}
+physeq.prev.strainID <- physeq.prev
+tax_table(physeq.prev.strainID) <- strainID
+dim(tax_table(physeq.prev))
+dim(tax_table(physeq.prev.strainID))
+```
+
+Note the additional column (for the strain).  Are there any overall differences?
+
+```{r}
+# we pick the first seven ranks
+setdiff(as.data.frame(tax_table(physeq.prev)),
+        as.data.frame(tax_table(physeq.prev.strainID))[1:7])
+```
+
+12 of the 24 that are different in some way.  
+
+```{r}
+tmp <- lapply(rank_names(physeq.prev), function(x) { 
+  tmp1 <- setdiff(as.data.frame(tax_table(physeq.prev)[,x]),
+          as.data.frame(tax_table(physeq.prev.strainID)[,x]))
+})
+names(tmp) <- rank_names(physeq.prev)
+length(tmp)
+```
+
+Here is the list where there are species ranks differences
+
+```{r}
+tmp$Genus
+```
+
+```{r}
+tmp$Species
+```
+
+One taxa in particular is present for all ranks (`009ae74309cf8936c62c7ffbc741a27a`), but this seems due to it not being called at all with StrainID.
+
+Here is a breakdown, looking at the above species
+
+```{r}
+taxids <- rownames(tmp$Species)
+tax.diff <- 
+  bind_rows(as.data.frame(tax_table(physeq.prev.strainID)[taxids,]) |> tibble::rownames_to_column('ID'),
+            as.data.frame(tax_table(physeq.prev)[taxids,]) |> tibble::rownames_to_column('ID')) |>
+  add_column(Database = c(rep("StrainID", length(taxids)), rep("Silva", length(taxids))), .before = 'Domain')
+  
+#tax.diff <- tax.diff[ order(rownames(tax.diff)), ]
+arrange(tax.diff, ID)
+```
+
+Save phyloseq object
+
+```{r}
+saveRDS(physeq.prev.strainID, 
+        '../results/PrevalenceFiltering/phyloseq.prevfiltered.strainID.RDS')
+```
+
+Save to text files:
+
+```{r}
+write.table(tax.diff, '../results/PrevalenceFiltering/Database-differences.txt', sep = "\t", row.names = FALSE)
+
+as.data.frame(tax_table(physeq.prev.strainID)) |> 
+  tibble::rownames_to_column('ID') |> 
+  write.table('../results/PrevalenceFiltering/StrainID-Taxonomy.txt', sep = "\t", row.names = FALSE)
+
+as.data.frame(tax_table(physeq.prev)) |> 
+  tibble::rownames_to_column('ID') |> 
+  write.table('../results/PrevalenceFiltering/Silva-Taxonomy.txt', sep = "\t", row.names = FALSE)
+```
+

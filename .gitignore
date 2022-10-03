@@ -1,4 +1,8 @@
+.DS_Store
 results*
 .Rhistory
 .Rproj.user*
 .Rproj.user
+*.html
+src/_book/*
+src/_bookdown_files/*

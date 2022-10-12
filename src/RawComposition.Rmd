@@ -1,27 +1,52 @@
 ```{r, include=FALSE}
 # at some point this should be moved into bookdown
-source("~/research/biotech/young-chae_kim/2021-Fall-Microbiome/src/common_code.R", local = knitr::knit_global())
+source("~/Desktop/hpcbio-git/hergenrother-16S-mouse-2022Sept/src/common_code.R", local = knitr::knit_global())
 ```
 
 ```{r}
-physeq <- readRDS('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/physeq.raw.RDS')
+physeq <- readRDS('results/physeq.raw.RDS')
 ```
 
 # Composition plots (unfiltered data)
 
-Overall compositional summary (stacked bar plots) for all samples.  In this example here are the top 15 families by composition per sample, split by treatment.  Note again that most can be classified to the family or order rank, but genus and species ranks see few reliable assignments.
+Overall compositional summary (stacked bar plots) for all unfiltered samples.  In this example here are the top 20 families by composition per sample, split by treatment. Data has been transformed to relative abundance (no prior added). Note again that most can be classified to the family or order rank, but genus and species ranks see few reliable assignments. 
+
+
+```{r }
+#Get relative abundance
+physeq.prop <- transform_sample_counts(physeq, function(x) x/sum(x) )
+sample_data(physeq.prop)$SampleSums <- sample_sums(physeq)
+
+#Pull out top 20 families
+physeq.subset <- tax_glom(physeq.prop, taxrank = "Family")
+tax.ordered <- names(sort(taxa_sums(physeq.prop), TRUE)[1:20])
+physeq.plot <- subset_taxa(physeq.prop, taxa_names(physeq.prop) %in% tax.ordered)
+```
 
 ```{r, results='asis', fig.keep='all', message = FALSE, warning = FALSE, echo = FALSE}
+kc <- c("SampleID","Label","Treatment","Day","Replicate")
 ranks <- c("Class", "Order", "Family", "Genus", "Species")
 plots <- lapply(ranks, function (x) { 
-  p <- phyloseq.extended::plot_composition(physeq,
-                                         taxaSet1 = NULL, 
-                                         taxaRank2 = x, 
-                                         fill = x, 
-                                         numberOfTaxa = 15) + 
-    facet_wrap(~Sex, scales = "free_x", nrow = 1)
-  ggplotly(p)}
-  )
+
+  #Plot relative abundance
+  p <- plot_bar(physeq.plot, x="Label", fill = x)
+  p1 <- p + theme(legend.key.size = unit(0.25, 'cm'), #change legend key size
+        legend.title = element_text(size=8), #change legend title font size
+        legend.text = element_text(size=8),
+        axis.title.x=element_blank(),
+        axis.text.x = element_text(size = 5),
+        axis.ticks.x = element_blank()) +
+        ylab("Relative Abundance") +
+        facet_wrap(~Treatment, scales = "free_x")
+  
+#p <- composition_df(physeq, x, minprop = 0.05, keepcols = kc)
+#p + facet_wrap(~Location, scales = "free_x", nrow = 1)
+  #ggplot(p, aes(x = Label, y = Proportion, fill = print(x, quote=FALSE))) + geom_col() + 
+  #  facet_wrap(~Treatment, scales = "free_x") + 
+  #  scale_fill_manual(values = dittoSeq::dittoColors(1)) +
+  #  theme(axis.text.x = element_text(size = 8, angle = 45, hjust = 1, vjust = 0.5))
+ ggplotly(p1)
+})
 
 names(plots) <- ranks
 

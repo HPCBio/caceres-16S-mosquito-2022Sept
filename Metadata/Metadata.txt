@@ -1,17 +1,96 @@
-SampleID	Strain	Sex	Replicate
-MB1	C57BL/6 	M	1
-MB2	C57BL/6 	M	2
-MB3	C57BL/6 	M	3
-MB4	SHP-T58A	M	1
-MB5	SHP-T58A	M	2
-MB6	SHP-T58A	M	3
-MB7	SHP-T58A	M	4
-MB8	C57BL/6 	F	1
-MB9	C57BL/6 	F	2
-MB10	C57BL/6 	F	3
-MB11	C57BL/6 	F	4
-MB12	C57BL/6 	F	5
-MB13	SHP-T58A	F	1
-MB14	SHP-T58A	F	2
-MB15	SHP-T58A	F	3
-MB16	SHP-T58A	F	4
+SampleID	Label	Treatment	Replicate	Day	Forward_Primer	Reverse_Primer
+Vehicle_1_Day_0	V_D0_1	Vehicle	1	0	bc1005	bc1033
+Vehicle_2_Day_0	V_D0_2	Vehicle	2	0	bc1007	bc1033
+Vehicle_3_Day_0	V_D0_3	Vehicle	3	0	bc1008	bc1033
+Vehicle_4_Day_0	V_D0_4	Vehicle	4	0	bc1012	bc1033
+Vehicle_5_Day_0	V_D0_5	Vehicle	5	0	bc1015	bc1033
+Vehicle_6_Day_0	V_D0_6	Vehicle	6	0	bc1020	bc1033
+Vehicle_1_Day_7	V_D07_1	Vehicle	1	7	bc1022	bc1033
+Vehicle_2_Day_7	V_D07_2	Vehicle	2	7	bc1024	bc1033
+Vehicle_3_Day_7	V_D07_3	Vehicle	3	7	bc1005	bc1035
+Vehicle_4_Day_7	V_D07_4	Vehicle	4	7	bc1007	bc1035
+Vehicle_5_Day_7	V_D07_5	Vehicle	5	7	bc1008	bc1035
+Vehicle_6_Day_7	V_D07_6	Vehicle	6	7	bc1012	bc1035
+Vehicle_1_Day_10	V_D10_1	Vehicle	1	10	bc1015	bc1035
+Vehicle_2_Day_10	V_D10_2	Vehicle	2	10	bc1020	bc1035
+Vehicle_3_Day_10	V_D10_3	Vehicle	3	10	bc1022	bc1035
+Vehicle_4_Day_10	V_D10_4	Vehicle	4	10	bc1024	bc1035
+Vehicle_5_Day_10	V_D10_5	Vehicle	5	10	bc1005	bc1044
+Vehicle_6_Day_10	V_D10_6	Vehicle	6	10	bc1007	bc1044
+Vehicle_1_Day_31	V_D31_1	Vehicle	1	31	bc1008	bc1044
+Vehicle_2_Day_31	V_D31_2	Vehicle	2	31	bc1012	bc1044
+Vehicle_3_Day_31	V_D31_3	Vehicle	3	31	bc1015	bc1044
+Vehicle_4_Day_31	V_D31_4	Vehicle	4	31	bc1020	bc1044
+Vehicle_5_Day_31	V_D31_5	Vehicle	5	31	bc1022	bc1044
+Vehicle_6_Day_31	V_D31_6	Vehicle	6	31	bc1024	bc1044
+Lolamycin_1_Day_0	L_D0_1	Lolamycin	1	0	bc1005	bc1045
+Lolamycin_2_Day_0	L_D0_2	Lolamycin	2	0	bc1007	bc1045
+Lolamycin_3_Day_0	L_D0_3	Lolamycin	3	0	bc1008	bc1045
+Lolamycin_4_Day_0	L_D0_4	Lolamycin	4	0	bc1012	bc1045
+Lolamycin_5_Day_0	L_D0_5	Lolamycin	5	0	bc1015	bc1045
+Lolamycin_6_Day_0	L_D0_6	Lolamycin	6	0	bc1020	bc1045
+Lolamycin_1_Day_7	L_D07_1	Lolamycin	1	7	bc1022	bc1045
+Lolamycin_2_Day_7	L_D07_2	Lolamycin	2	7	bc1024	bc1045
+Lolamycin_3_Day_7	L_D07_3	Lolamycin	3	7	bc1005	bc1054
+Lolamycin_4_Day_7	L_D07_4	Lolamycin	4	7	bc1007	bc1054
+Lolamycin_5_Day_7	L_D07_5	Lolamycin	5	7	bc1008	bc1054
+Lolamycin_6_Day_7	L_D07_6	Lolamycin	6	7	bc1012	bc1054
+Lolamycin_1_Day_10	L_D10_1	Lolamycin	1	10	bc1015	bc1054
+Lolamycin_2_Day_10	L_D10_2	Lolamycin	2	10	bc1020	bc1054
+Lolamycin_3_Day_10	L_D10_3	Lolamycin	3	10	bc1022	bc1054
+Lolamycin_4_Day_10	L_D10_4	Lolamycin	4	10	bc1024	bc1054
+Lolamycin_5_Day_10	L_D10_5	Lolamycin	5	10	bc1005	bc1056
+Lolamycin_6_Day_10	L_D10_6	Lolamycin	6	10	bc1007	bc1056
+Lolamycin_1_Day_31	L_D31_1	Lolamycin	1	31	bc1008	bc1056
+Lolamycin_2_Day_31	L_D31_2	Lolamycin	2	31	bc1012	bc1056
+Lolamycin_3_Day_31	L_D31_3	Lolamycin	3	31	bc1015	bc1056
+Lolamycin_4_Day_31	L_D31_4	Lolamycin	4	31	bc1020	bc1056
+Lolamycin_5_Day_31	L_D31_5	Lolamycin	5	31	bc1022	bc1056
+Lolamycin_6_Day_31	L_D31_6	Lolamycin	6	31	bc1024	bc1056
+Amoxicillin_1_Day_0	A_D0_1	Amoxicillin	1	0	bc1005	bc1057
+Amoxicillin_2_Day_0	A_D0_2	Amoxicillin	2	0	bc1007	bc1057
+Amoxicillin_3_Day_0	A_D0_3	Amoxicillin	3	0	bc1008	bc1057
+Amoxicillin_4_Day_0	A_D0_4	Amoxicillin	4	0	bc1012	bc1057
+Amoxicillin_5_Day_0	A_D0_5	Amoxicillin	5	0	bc1015	bc1057
+Amoxicillin_6_Day_0	A_D0_6	Amoxicillin	6	0	bc1020	bc1057
+Amoxicillin_1_Day_7	A_D07_1	Amoxicillin	1	7	bc1022	bc1057
+Amoxicillin_3_Day_7	A_D07_3	Amoxicillin	3	7	bc1005	bc1059
+Amoxicillin_4_Day_7	A_D07_4	Amoxicillin	4	7	bc1007	bc1059
+Amoxicillin_5_Day_7	A_D07_5	Amoxicillin	5	7	bc1008	bc1059
+Amoxicillin_6_Day_7	A_D07_6	Amoxicillin	6	7	bc1012	bc1059
+Amoxicillin_1_Day_10	A_D10_1	Amoxicillin	1	10	bc1015	bc1059
+Amoxicillin_2_Day_10	A_D10_2	Amoxicillin	2	10	bc1020	bc1059
+Amoxicillin_3_Day_10	A_D10_3	Amoxicillin	3	10	bc1022	bc1059
+Amoxicillin_4_Day_10	A_D10_4	Amoxicillin	4	10	bc1024	bc1059
+Amoxicillin_5_Day_10	A_D10_5	Amoxicillin	5	10	bc1005	bc1060
+Amoxicillin_6_Day_10	A_D10_6	Amoxicillin	6	10	bc1007	bc1060
+Amoxicillin_1_Day_31	A_D31_1	Amoxicillin	1	31	bc1008	bc1060
+Amoxicillin_2_Day_31	A_D31_2	Amoxicillin	2	31	bc1012	bc1060
+Amoxicillin_3_Day_31	A_D31_3	Amoxicillin	3	31	bc1015	bc1060
+Amoxicillin_4_Day_31	A_D31_4	Amoxicillin	4	31	bc1020	bc1060
+Amoxicillin_5_Day_31	A_D31_5	Amoxicillin	5	31	bc1022	bc1060
+Amoxicillin_6_Day_31	A_D31_6	Amoxicillin	6	31	bc1024	bc1060
+Clindamycin_1_Day_0	C_D0_1	Clindamycin	1	0	bc1005	bc1062
+Clindamycin_2_Day_0	C_D0_2	Clindamycin	2	0	bc1007	bc1062
+Clindamycin_3_Day_0	C_D0_3	Clindamycin	3	0	bc1008	bc1062
+Clindamycin_4_Day_0	C_D0_4	Clindamycin	4	0	bc1012	bc1062
+Clindamycin_5_Day_0	C_D0_5	Clindamycin	5	0	bc1015	bc1062
+Clindamycin_6_Day_0	C_D0_6	Clindamycin	6	0	bc1020	bc1062
+Clindamycin_1_Day_7	C_D07_1	Clindamycin	1	7	bc1022	bc1062
+Clindamycin_2_Day_7	C_D07_2	Clindamycin	2	7	bc1024	bc1062
+Clindamycin_3_Day_7	C_D07_3	Clindamycin	3	7	bc1005	bc1065
+Clindamycin_4_Day_7	C_D07_4	Clindamycin	4	7	bc1007	bc1065
+Clindamycin_5_Day_7	C_D07_5	Clindamycin	5	7	bc1008	bc1065
+Clindamycin_6_Day_7	C_D07_6	Clindamycin	6	7	bc1012	bc1065
+Clindamycin_1_Day_10	C_D10_1	Clindamycin	1	10	bc1015	bc1065
+Clindamycin_2_Day_10	C_D10_2	Clindamycin	2	10	bc1020	bc1065
+Clindamycin_3_Day_10	C_D10_3	Clindamycin	3	10	bc1022	bc1065
+Clindamycin_4_Day_10	C_D10_4	Clindamycin	4	10	bc1024	bc1065
+Clindamycin_5_Day_10	C_D10_5	Clindamycin	5	10	bc1005	bc1075
+Clindamycin_6_Day_10	C_D10_6	Clindamycin	6	10	bc1007	bc1075
+Clindamycin_1_Day_31	C_D31_1	Clindamycin	1	31	bc1008	bc1075
+Clindamycin_2_Day_31	C_D31_2	Clindamycin	2	31	bc1012	bc1075
+Clindamycin_3_Day_31	C_D31_3	Clindamycin	3	31	bc1015	bc1075
+Clindamycin_4_Day_31	C_D31_4	Clindamycin	4	31	bc1020	bc1075
+Clindamycin_5_Day_31	C_D31_5	Clindamycin	5	31	bc1022	bc1075
+Clindamycin_6_Day_31	C_D31_6	Clindamycin	6	31	bc1024	bc1075

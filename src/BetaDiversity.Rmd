@@ -3,7 +3,7 @@ source("~/research/biotech/young-chae_kim/2021-Fall-Microbiome/src/common_code.R
 ```
 
 ```{r}
-physeq.prev <- readRDS('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/phyloseq.prevfiltered.RDS')
+physeq.prev <- readRDS('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/phyloseq.prevfiltered.males.RDS')
 ```
 
 # Beta diversity
@@ -85,7 +85,7 @@ p1 = plot_ordination(physeq.active,
                      color="Strain",
                      shape = "Sex",
                      title="Samples") + geom_point(size = 2.5)
-p1 + ggtitle("PCoA, Bray Curtis distance")
+ggplotly(p1 + ggtitle("PCoA, Bray Curtis distance"))
 #+  scale_fill_viridis_d()
 ```
 
@@ -97,7 +97,7 @@ p1 <- plot_ordination(physeq.active,
                      label="SampleID",
                      title="Samples") + geom_point(size = 2.5) +
   ggtitle("PCoA, Bray Curtis distance") 
-p1
+ggplotly(p1)
 ```
 
 Nothing odd here. 
@@ -116,7 +116,7 @@ p1 = plot_ordination(physeq.active,
                      label = "SampleID",
                      title="Samples") + geom_point(size = 2.5)
 #p1 + scale_color_brewer(palette="Spectral")
-p1
+ggplotly(p1)
 ```
 
 ## PERMANOVA
@@ -155,7 +155,7 @@ beta <- betadisper(finalPhyseq.prop.dist.bc, finalPhyseq.meta$Strain)
 permutest(beta)
 ```
 
-Significant hit, so some heteroskedascity.
+Not significant but this is also underpowered and pretty variable based on the pattern.
 
 ```{r}
 plot(beta, main = "beta dispersion estimates between strains")

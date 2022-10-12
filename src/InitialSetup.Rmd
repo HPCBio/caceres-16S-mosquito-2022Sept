@@ -1,18 +1,21 @@
+Load functions in "common_code.R"
 ```{r, include=FALSE}
 # at some point this should be moved into bookdown
-source("~/research/biotech/young-chae_kim/2021-Fall-Microbiome/src/common_code.R", local = knitr::knit_global())
+source("~/Desktop/hpcbio-git/hergenrother-16S-mouse-2022Sept/src/common_code.R", local = knitr::knit_global())
 ```
 
 # Setting up the data and project
 
-Code (not shown in the report) is initialized and loaded here.  We don't include the code in the report but make this available as needed; please see the [Github repository](https://github.com/HPCBio/kim-16S-mouse-2022Feb) for this project for the final version.
+Code (not shown in the report) is initialized and loaded here.  We don't include the code in the report but make this available as needed; please see the [Github repository](https://github.com/HPCBio/hergenrother-16S-mouse-2022Sept) for this project for the final version.
 
-Data from the primary project folder should be downloaded from [here](https://uofi.box.com/s/4p1tp8tn4o64s5j8ywf9ahi7t3s9qajo) (requires permissions). Note the following assumes all data are in `2022-Feb-16S`.  Also note that paths in the code will very likely need to be modified to rerun these (this is partly due to how the code and relevant parts of the analysis are sourced).
+Data from the primary project folder should be downloaded from [here](https://uofi.app.box.com/folder/171910903803) (requires permissions). Note the following assumes all data are in a folder named `2022-Sept-16S`.  Also note that paths in the code will very likely need to be modified to rerun these (this is partly due to how the code and relevant parts of the analysis are sourced).
 
 ```{r, echo=FALSE}
 library(knitr)
 knitr::opts_chunk$set(echo = FALSE, include = TRUE)
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
+
+options(stringsAsFactors = FALSE)
 ```
 
 ## Import and preprocessing
@@ -21,10 +24,45 @@ knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 
 There is one run with all of the data.  Load it in along with the relevant tree and sequence data (metadata to be added).
 
-First, let's load in the newer taxonomic analysis using QIIME2.  It looks like this:
+
+
+### Load metadata
+
+Load in experimental data on samples (metadata).  Here are the first few rows:
 
 ```{r}
-taxtab <- readRDS('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/TADA/R1/Phyloseq/tax_final.md5.R1.RDS')
+library(readxl)
+tmp <- read_tsv('Metadata/Metadata.txt')
+tmp$Treatment <- factor(tmp$Treatment, levels = c("Vehicle","Lolamycin","Amoxicillin","Clindamycin"))
+tmp$Day <- factor(tmp$Day, ordered = TRUE)
+tmp$Replicate <- factor(tmp$Replicate)
+#tmp$Label <- factor(tmp$Label, levels = tmp$Label)
+
+knitr::kable(head(tmp), show_col_types = FALSE)
+```
+
+We also read in QC so we can layer in whether read abundance plays a role.  We need to do a bit of our own read tracking here (it's not currently in the pipeline but can be added).
+
+```{r results="asis"}
+track <- read_tsv("2022-Sept-16S/Plain/QC/all.readtracking.txt")
+knitr::kable(track, show_col_types = FALSE)
+```
+
+Very few sequences were lost at any step in DADA2. That's great!
+
+Combine all metadata together for analysis and add back to the class.
+
+```{r, include=FALSE}
+tmp2 <- sample_data(right_join(tmp, track, by="SampleID"))
+sample_names(tmp2) <- tmp2$Sample
+sample_names(tmp2)
+
+```
+
+First, let's load in the taxonomic analysis. We can also try the QIIME taxonomy assignment later if needed. It looks like this:
+
+```{r}
+taxtab <- readRDS('2022-Sept-16S/Phyloseq/tax_final.simple.RDS')
 
 # this is needed for some downstream steps
 taxtab[taxtab == 'Unclassified'] <- NA
@@ -35,9 +73,17 @@ Object summary:
 
 ```{r}
 colnames(taxtab) <- c("Domain", "Phylum", "Class", "Order", "Family", "Genus", "Species")
-seqtab.tmp <- readRDS('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/TADA/R1/Phyloseq/seqtab_final.md5.R1.RDS')
-tree.tmp <- read_tree('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/TADA/R1/Plain/Trees/rooted.R1.newick')
-asvs.tmp <- Biostrings::readDNAStringSet('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/TADA/R1/Plain/Sequences/asvs.md5.nochim.R1.fna', format = 'fasta')
+seqtab.tmp <- readRDS('2022-Sept-16S/Phyloseq/seqtab_final.simple.RDS')
+
+# Remove file ending from rownames
+rownames(seqtab.tmp) <- gsub(".filtered.fastq.gz","", rownames(seqtab.tmp))
+# re-order the seqtab.tmp to be in the same order as the metadata
+tmp.m <- match(tmp2$SampleID, rownames(seqtab.tmp))
+seqtab.tmp <- seqtab.tmp[tmp.m,]
+
+tree.tmp <- read_tree('2022-Sept-16S/Plain/Trees/rooted.newick')
+asvs.tmp <- Biostrings::readDNAStringSet('2022-Sept-16S/Plain/Sequences/asvs.md5.nochim.fna', format = 'fasta')
+
 physeq <- phyloseq(
   otu_table(seqtab.tmp, taxa_are_rows = F),
   tax_table(taxtab),
@@ -47,42 +93,6 @@ physeq <- phyloseq(
 physeq
 ```
 
-First few sample names to make sure they look like a simple format:
-
-```{r}
-head(sample_names(physeq))
-```
-
-### Load metadata
-
-Load in experimental data on samples (metadata).  Here are the first few rows:
-
-```{r}
-library(readxl)
-tmp <- read_tsv('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/Metadata/Metadata.txt')
-tmp$Strain <- factor(tmp$Strain)
-tmp$Sex <- factor(tmp$Sex)
-tmp$Replicate <- factor(tmp$Replicate)
-
-knitr::kable(head(tmp))
-```
-
-We also read in read QC so we can layer in whether read abundance plays a role.  We need to do a bit of our own read tracking here (it's not currently in the pipeline but can be added).
-
-```{r results="asis"}
-track <- read_tsv("~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/TADA/Plain/QC/all.readtracking.R1.txt")
-knitr::kable(track)
-```
-
-We see a fairly substantial drop from merging; we can possibly use just R1, but let's proceed with this first.
-
-Combine all metadata together for analysis and add back to the class.
-
-```{r, include=FALSE}
-tmp2 <- sample_data(right_join(tmp, track, by="SampleID"))
-sample_names(tmp2) <- tmp2$Sample
-sample_names(tmp2)
-```
 
 Here is the sample object summary now:
 
@@ -100,6 +110,5 @@ sample_data(physeq) %>% as("data.frame") %>% head %>% knitr::kable()
 ## Save file
 
 ```{r}
-saveRDS(physeq, 
-        '~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/physeq.raw.RDS')
+saveRDS(physeq, 'results/physeq.raw.RDS')
 ```

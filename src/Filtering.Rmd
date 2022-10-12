@@ -2,12 +2,13 @@
 
 ```{r, include=FALSE}
 # at some point this should be moved into bookdown
-source("~/research/biotech/young-chae_kim/2021-Fall-Microbiome/src/common_code.R", local = knitr::knit_global())
+source("~/Desktop/hpcbio-git/hergenrother-16S-mouse-2022Sept/src/common_code.R", local = knitr::knit_global())
 ```
 
 ```{r}
 # Load in data
-physeq <- readRDS('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/physeq.raw.RDS')
+physeq <- readRDS('results/physeq.raw.RDS')
+physeq.filtered <- physeq
 ```
 
 These steps remove or subset the original data by:
@@ -25,47 +26,44 @@ We save this file for alpha rarefaction, alpha diversity, and prevalence filteri
 
 Are we focusing on one particular subset of samples?  
 
-<!-- Here we are, specifically the male samples. -->
+Not at the moment, so will skip the following step.
 
-<!-- ### Male samples -->
+### Subset samples
 
-<!-- Create a data set for filtering that is male-only: -->
 
-<!-- ```{r} -->
-<!-- physeq.filtered <- subset_samples(physeq, Sex == "M") -->
-<!-- physeq.filtered -->
-<!-- ``` -->
+```{r}
+#physeq.filtered <- subset_samples(physeq, Sex == "M")
+#physeq.filtered
+```
 
 ## Prune out any other samples?
 
-Here, we will normally prune out sample MB8, which was determined as a significant outlier by the overall compositional analysis and from a prior data run.  However this is already removed.
-
-MB5 however also has a distinct pattern
+Can use this to filter out outliers if needed, but for now I will not.
 
 ```{r }
-physeq.filtered <- prune_samples(!(sample_names(physeq) %in% c("MB5", "MB8")), physeq)
-physeq.filtered
+# physeq.filtered <- prune_samples(!(sample_names(physeq.filtered) %in% c("MB4", "MB5")), physeq.filtered)
+# physeq.filtered
 ```
 
 ## Zero-count taxa
 
-Since we are removing samples, there may be some taxa that are no longer present in the subset we have.  Any taxa present that are 0 count?
+If we remove samples, there may be some taxa that are no longer present in the subset we have.  Any taxa present that are 0 count?
 
 ```{r}
 table(taxa_sums(physeq.filtered) == 0)
 ```
 
-Quite a few!  Remove those
+There are none.
 
 ```{r}
-physeq.filtered <- subset_taxa(physeq.filtered, taxa_sums(physeq.filtered) > 0)
-physeq.filtered
+#physeq.filtered <- subset_taxa(physeq.filtered, taxa_sums(physeq.filtered) > 0)
+#physeq.filtered
 ```
 
-Save these as a separate input for the next steps.
+If needed, save these as a separate input for the next steps.
 
 ```{r}
-saveRDS(physeq.filtered, '~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/physeq.raw.males.RDS')
+#saveRDS(physeq.filtered, 'results/physeq.raw.males.RDS')
 ```
 
 ## Removing artifacts
@@ -90,6 +88,7 @@ ranks <- data.frame(apply(taxtab, 2,
 colnames(ranks) <- c("Perc.Unclassified")
 ranks %>% kable
 ```
+
 How many Domain/Kingdom levels are there?
 
 ```{r }
@@ -106,7 +105,7 @@ How many Phylum are unassigned?  (TRUE means these are unassigned)
 table(is.na(tax_table(physeq.filtered)[,'Phylum'])) %>% kable
 ```
 
-39 are not assigned at the phylum rank.  Export the unassigned sequences to a file.
+Only 1 is not assigned at the phylum rank.  Export the unassigned sequences to a file.
 
 ```{r}
 unasn <- subset_taxa(physeq.filtered, is.na(Phylum))
@@ -114,9 +113,10 @@ unasn
 ```
 
 ```{r}
+library(Biostrings)
 dir.create(file.path('..', 'results', 'unasn-sequences'), showWarnings = FALSE, recursive = TRUE)
 writeXStringSet(refseq(unasn), 
-                filepath = '../results/unasn-sequences/unassigned.fna', 
+                filepath = '../results/unasn-sequences/unassigned-phylum-level.fna', 
                 format = 'fasta')
 ```
 
@@ -156,20 +156,15 @@ Any hits for chloroplast? These are found under the `Class` rank.
 table(tax_table(physeq.filtered)[,'Order'])['Chloroplast']
 ```
 
-2 chloroplast sequences (?!?).  Let's grab these and export to look into further; these are the samples that have chloroplast sequences. 
+3 chloroplast sequences.  Let's grab these and export to look into further; these are the samples that have chloroplast sequences. 
 
 ```{r}
 chloros <- subset_taxa(physeq.filtered, Order == 'Chloroplast')
 sample_sums(chloros) %>% magrittr::extract(. > 0)
 ```
 
-Very low (negligible).
+Only in 10 samples and in low amounts (negligible).
 
-```{r }
-# use this to filter chloroplast sequence
-#physeq <- subset_taxa(physeq, Class != 'Chloroplast')
-#physeq
-```
 
 Any mitochondrial sequences?  
 
@@ -177,19 +172,17 @@ Any mitochondrial sequences?
 table(tax_table(physeq.filtered)[,'Family'])['Mitochondria']
 ```
 
-1 mitochondrial sequence.  What is it?
+There are a couple.
 
 ```{r }
-mitos <- subset_taxa(physeq.filtered, Family == 'Mitochondria')
-sample_sums(mitos) %>% magrittr::extract(. > 0)
+#mitos <- subset_taxa(physeq.filtered, Family == 'Mitochondria')
+#sample_sums(mitos) %>% magrittr::extract(. > 0)
 ```
 
-Note these are found in all samples and are a bit variable.  
-
-For the final filtered data, we will remove the controls and the mitochondrial taxa.
+For the final filtered data, we will remove the chloroplasts and the mitochondrial taxa.
 
 ```{r }
-# remove control samples that aren't part of the analysis (water, Zymo)
+# remove negative control samples that aren't part of the analysis (water, Zymo)
 #physeq.filtered <- subset_samples(physeq, Treatment != 'Control')
 
 # remove mitochondria
@@ -295,7 +288,7 @@ We skip this in favor of precedence filtering, but will plot a histogram of samp
 hist(sample_sums(physeq.filtered), breaks = 50)
 ```
 
-Pretty reasonable spread. 2 samples are below our standard 10k count limit.
+Pretty reasonable spread. No samples are below our standard 10k count limit.
 
 
 ## Basic overview
@@ -321,11 +314,10 @@ ex0 = prune_taxa(myTaxa1, physeq.filtered)
 plot_tree(ex0, label.tips = 'Family',
           ladderize = "left",
           justify = "left",
-          color = 'Strain'
+          color = 'Treatment'
           )
 ```
 
 ```{r}
-saveRDS(physeq.filtered, 
-        '~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/physeq.filtered.RDS')
+saveRDS(physeq.filtered, 'results/physeq.filtered.RDS')
 ```

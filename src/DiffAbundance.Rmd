@@ -3,7 +3,7 @@ source("~/research/biotech/young-chae_kim/2021-Fall-Microbiome/src/common_code.R
 ```
 
 ```{r}
-physeq.prev <- readRDS('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/phyloseq.prevfiltered.RDS')
+physeq.prev <- readRDS('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/phyloseq.prevfiltered.males.RDS')
 ```
 
 # Differential abundance analysis
@@ -71,42 +71,6 @@ plotDESeq2Res <- function(res) {
 
 Pull out specific contrast. The numbers in the contrast vector below correspond to the different test results we generated:
 
-## C57BL.6 - F vs M
-
-```{r }
-# [1] "GroupC57BL.6.F"  "GroupC57BL.6.M"  "GroupSHP.T58A.F" "GroupSHP.T58A.M"
-res.test = generateContrastResults(deseq = finalPhyseq.adds,
-                              contrast = c("Group", "C57BL.6.F", "C57BL.6.M"),
-                              physeq = physeq.prev,
-                              file = "~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/DESeq2/Overall-C57BL.6-FvsM.txt"
-)
-dim(res.test[which(res.test$padj <= 0.05), ])
-```
-
-The first number above corresponds to the number of significant taxa (p <= 0.05) in this test result.
-
-We can plot this w/ a DESeq function...
-
-```{r }
-plotDESeq2Res(res.test)
-```
-
-## SHP-T58A - F vs M
-
-```{r }
-# [1] "GroupC57BL.6.F"  "GroupC57BL.6.M"  "GroupSHP.T58A.F" "GroupSHP.T58A.M"
-res.test = generateContrastResults(deseq = finalPhyseq.adds,
-                              contrast = c("Group", "SHP.T58A.F", "SHP.T58A.M"),
-                              physeq = physeq.prev,
-                              file = "~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/DESeq2/Overall-SHP.T58A-FvsM.txt"
-)
-dim(res.test[which(res.test$padj <= 0.05), ])
-```
-
-```{r }
-plotDESeq2Res(res.test)
-```
-
 ## Males - SHP.T58A vs C57BL.6
 
 ```{r }
@@ -114,23 +78,7 @@ plotDESeq2Res(res.test)
 res.test = generateContrastResults(deseq = finalPhyseq.adds,
                               contrast = c("Group", "SHP.T58A.M", "C57BL.6.M"),
                               physeq = physeq.prev,
-                              file = "~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/DESeq2/Overall-Male-SHP.T58AvsC57BL.6.txt"
-)
-dim(res.test[which(res.test$padj <= 0.05), ])
-```
-
-```{r }
-plotDESeq2Res(res.test)
-```
-
-## Females - SHP.T58A vs C57BL.6
-
-```{r }
-# [1] "GroupC57BL.6.F"  "GroupC57BL.6.M"  "GroupSHP.T58A.F" "GroupSHP.T58A.M"
-res.test = generateContrastResults(deseq = finalPhyseq.adds,
-                              contrast = c("Group", "SHP.T58A.F", "C57BL.6.F"),
-                              physeq = physeq.prev,
-                              file = "~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/DESeq2/Overall-Female-SHP.T58AvsC57BL.6.txt"
+                              file = "~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/DESeq2/Overall-Male-SHP.T58AvsC57BL.6.males.txt"
 )
 dim(res.test[which(res.test$padj <= 0.05), ])
 ```

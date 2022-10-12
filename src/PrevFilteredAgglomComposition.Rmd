@@ -4,10 +4,10 @@ source("~/research/biotech/young-chae_kim/2021-Fall-Microbiome/src/common_code.R
 ```
 
 ```{r}
-physeq.prev <- readRDS('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/phyloseq.prevfiltered.RDS')
+physeq.prev <- readRDS('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/phyloseq.prevfiltered.males.RDS')
 ```
 
-# Composition plots (unfiltered data)
+# Composition plots (filtered data)
 
 Overall compositional summary (stacked bar plots) for all samples.  In this example here are the top 15 families by composition per sample, split by treatment.  Note again that most can be classified to the family or order rank, but genus and species ranks see few reliable assignments.
 

@@ -1,9 +1,9 @@
 ```{r, include=FALSE}
-source("~/research/biotech/young-chae_kim/2021-Fall-Microbiome/src/common_code.R", local = knitr::knit_global())
+source("~/Desktop/hpcbio-git/hergenrother-16S-mouse-2022Sept/src/common_code.R", local = knitr::knit_global())
 ```
 
 ```{r}
-physeq.filtered <- readRDS('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/physeq.filtered.RDS')
+physeq.filtered <- readRDS('results/physeq.filtered.RDS')
 ```
 
 # Prevalence filtering
@@ -39,23 +39,23 @@ We have some on the low end, with `r sum(sample_sums(physeq.filtered) <= 5000)` 
 ```{r PrevalenceFiltering-11 }
 p <- ggplot(data = data.frame(
     SampleSums = sample_sums(physeq.filtered),
-    Names = factor(sample_names(physeq.filtered), ordered = TRUE,
-                   levels = sample_names(physeq.filtered)),
-    Group = factor(sample_data(physeq.filtered)$Strain, ordered = TRUE)
+    Names = factor(sample_data(physeq.filtered)$Label, ordered = TRUE,
+                   levels = sample_data(physeq.filtered)$Label),
+    Group = factor(sample_data(physeq.filtered)$Treatment, ordered = TRUE)
 ), aes(y = SampleSums, x = Names, fill = Group))
 p <- p + geom_bar(stat = 'identity' )
 p <- p + theme(axis.text.x = element_text(angle = 90, hjust = 1))
-p
+ggplotly(p)
 ```
 
 How do the ASV counts correlate with the read counts?
 
 ```{r PrevalenceFiltering-12 }
 myData <- data.frame(
-  Name = sample_names(physeq.filtered),
+  Name = sample_data(physeq.filtered)$Label,
   OTUSums = sample_sums(physeq.filtered),
   Reads = as.numeric(sample_data(physeq.filtered)$input),
-  Group = sample_data(physeq.filtered)$Strain
+  Group = sample_data(physeq.filtered)$Treatment
 )
 p <- ggplot(data = myData, aes(x = Reads, y = OTUSums))
 p <- p + geom_smooth(method = "gam", color = "lightgreen")
@@ -64,7 +64,7 @@ p <- p + geom_point(aes(color = Group))
 p
 ```
 
-These are very clean, much cleaner than if we used R1 and R2.
+These correlate very well with the read counts.
 
 Next we filter based on the features prevalent in the samples.  We will also switch the order of the filtering and tree-based (tip) agglomeration steps due to the nature of PacBio data (noisier at the tips); this is something we're discussing within the group. It may be strain-level variation that is difficult to assign.
 
@@ -80,12 +80,11 @@ p <- plot_tree(physeq.filtered,
           method = "treeonly") +
   ggtitle(paste0("Original tree: ", ntaxa(physeq.filtered), " taxa")) +
   theme(plot.title = element_text(size = 10))
-library(plotly)
 
 ggplotly(p)
 ```
 
-Zooming into the tips indicates there are a many sequences with very small differences.  
+Zooming into the tips indicates there are a many sequences with very small differences.
 
 ```{r PrevalenceFiltering-14}
 hist(log(phy_tree(physeq.filtered)$edge.length), 
@@ -95,7 +94,7 @@ hist(log(phy_tree(physeq.filtered)$edge.length),
 
 #### Clip out long branches
 
-There are a few long branches that we need to check.  You have to zoom into the right a bit and look at the frequencies accordingly:
+There may be one longer branch to check, but overall doesn't look bad. You have to zoom into the right a bit and look at the frequencies accordingly:
 
 ```{r PrevalenceFiltering-14.B}
 tmp <- phy_tree(physeq.filtered)
@@ -113,17 +112,17 @@ p <- treeTips %>%
 ggplotly(p + xlim(0.1, 1) + ylim(0,10))
 ```
 
-Several stand out with very long tip lengths. What are they?
+A couple stand out with very long tip lengths. What are the first 5?
 
 ```{r}
-longbranch <- treeTips[order(treeTips$Tip.Length, decreasing = TRUE)[1:31],]
+longbranch <- treeTips[order(treeTips$Tip.Length, decreasing = TRUE)[1:5],]
 
 tmp2 <- cbind(tax_table(physeq.filtered), as.data.frame(taxa_sums(physeq.filtered)))
 
 knitr::kable(tmp2[longbranch$ID,])
 ```
 
-These look real! I think we leave them as is.
+The longest branch looks real and is very prevalent so I don't see any need to remove long branches.
 
 What samples are these in?
 
@@ -156,7 +155,7 @@ text(cutoff, max(hist(cp_phylo, 100, plot=FALSE)$counts), labels = cutoff, pos =
 
 Note those at the high end of distance, probably out off-shoot group. We do not see those in the merged data!
 
-The red lines are some arbitrary test cutoffs. Based on the above we could use 0.3 (right after the small shoulder to the far left).  There are additional valleys around 0.5 and higher, but we could stay with the above threshold for now.
+The red lines are some arbitrary test cutoffs. Based on the above we could use 0.05 (right after first peak from left) or even between 0.15 and 0.2 (right after the second small peak from the left).
 
 Let's replot in log scale.  
 
@@ -171,11 +170,45 @@ abline(v=log(cutoff), col = "red")
 text(log(cutoff), max(hist(log(cp_phylo), 100, plot=FALSE)$counts), labels = cutoff, pos = 2, srt = 90, cex = .5 )
 ```
 
-I think 0.3 or 0.5 is fine for now if we choose tip agglomeration.
+The log scale doesn't make the cutoff any clearer, so lets explore more.
+
+
+```{r PrevalenceFiltering-17}
+# Use the cutoffs listed above
+
+# this takes some time to run :).  There is a speedyseq package with a faster tip_glom implementation, might be worth checking
+pseqs <- lapply(cutoff[1:7], function(x) {tip_glom(physeq.filtered, h = x)})
+
+names(pseqs) <- cutoff[1:7]
+```
+
+```{r PrevalenceFiltering-18}
+# In order to screen for instances with a tree we need to use tryCatch as checking the tree slot with phy_tree will error if it is NULL)
+
+pseqs.final <- pseqs[sapply(pseqs, function(x) {
+  !is.null( tryCatch({phy_tree(x)}, error = function(cond) { return(NULL) }) )
+  }, simplify = TRUE)]
+
+plots <- sapply(names(pseqs.final), function(x) {
+  plot_tree(pseqs.final[[x]], 
+          nodelabf = nodeplotblank,
+          ladderize = "left", 
+          method = "treeonly") + 
+  ggtitle(paste0("Height:",x, ", ", ntaxa(pseqs.final[[x]]), " taxa")) + 
+    theme(plot.title = element_text(size = 10))
+  }, simplify = FALSE
+  )
+
+grid.arrange(grobs = prepend(plots, list(Original = p)),
+             nrow = 3)
+
+```
+
+Still seeing small branches in height of 0.05. Let's try 0.175 (where the second small peak ended).
 
 ```{r PrevalenceFiltering-22}
 # pseqs <- lapply(cutoff[1:8], function(x) {speedyseq::tip_glom(physeq.filtered, h = x)})
-physeq.glom <- tip_glom(physeq.filtered, h = 0.3)
+physeq.glom <- tip_glom(physeq.filtered, h = 0.175)
 physeq.glom
 ```
 
@@ -189,10 +222,10 @@ taxglom_per_rank = function(physeq.glom, rank = "Species") {
   glommedPhyseq <- tax_glom(physeq.glom, taxrank = rank, NArm = TRUE)
   p <- ggplot(data = data.frame(
       SampleLoss = sample_sums(glommedPhyseq) / sample_sums(physeq.filtered),
-      Names = factor(sample_names(glommedPhyseq),
+      Names = factor(sample_names(glommedPhyseq)$Label,
                      ordered = TRUE,
-                     levels = sample_names(glommedPhyseq)),
-      Group = factor(sample_data(glommedPhyseq)$Strain, ordered = TRUE)
+                     levels = sample_names(glommedPhyseq)$Label),
+      Group = factor(sample_data(glommedPhyseq)$Treatment, ordered = TRUE)
   ), aes(y = SampleLoss, x = Names, fill = Group)) +
     geom_bar(stat = 'identity' ) +
     theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
@@ -339,6 +372,6 @@ p
 This retain the majority of data (~90% or so)  We can also try moving the agglomeration step *after* prevalence filtering, though this doesn't seem to make a significant difference.
 
 ```{r PrevalenceFiltering-35 }
-saveRDS(physeq.prev, file = "~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/phyloseq.prevfiltered.RDS")
+saveRDS(physeq.prev, file = "~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/phyloseq.prevfiltered.males.RDS")
 ```
 

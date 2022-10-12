@@ -1,10 +1,10 @@
 ```{r, include=FALSE}
 # at some point this should be moved into bookdown
-source("~/research/biotech/young-chae_kim/2021-Fall-Microbiome/src/common_code.R", local = knitr::knit_global())
+source("~/Desktop/hpcbio-git/hergenrother-16S-mouse-2022Sept/src/common_code.R", local = knitr::knit_global())
 ```
 
 ```{r}
-physeq.filtered <- readRDS('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/physeq.filtered.RDS')
+physeq.filtered <- readRDS('results/physeq.filtered.RDS')
 ```
 
 # Alpha diversity
@@ -15,7 +15,7 @@ Check alpha diversity stats.  Note we haven't performed any additional filtering
 
 ## Overall
 
-We'll calculate some initial alpha diversity metrics.  TODO: Note we include MB8 here which kills the Fisher test, so we'll initially exclude that test until we remove that sample
+We'll calculate some initial alpha diversity metrics.
 
 ```{r}
 # all six measures: Observed, Chao1, ACE, Shannon, Simpson, Inv. Simpson, Fisher
@@ -42,35 +42,61 @@ We'll check the overall measures for alpha diversity across different groups.  T
 * **Fisher** - Relationship between the number of species and the abundance of each species.  From the `vegan` package, function `diversity`. 
 * **Faith's PD** - Sum of the total phylogenetic branch length for one or multiple samples.  From the `picante` package, function `pd`. 
 
-Pull out just Faith PD for strain
+Look at significance of metrics across Day/time (compared to mean)
 
 ```{r}
 p <- plot_richness_estimates(physeq = physeq.filtered, 
                              erDF = erDF,
-                             "Strain", 
-                             color = "Sex", 
-                             title="Alpha diversity in different strains")
+                             "Day", 
+                             color = "Treatment", 
+                             title="Alpha diversity across time")
 
-p + geom_boxplot(aes(x=Strain,
+p + geom_boxplot(aes(x=Day,
                      y=value,
-                     color=NULL), alpha=0.2) +
-  stat_compare_means(label = "p.signif") +
-  ylab("Faith PD") + 
+                     color=NULL), alpha=0.1) +
+  stat_compare_means(label = "p.signif",
+                    # ref.group = "0",
+                     hide.ns = TRUE,
+                     method = "wilcox.test") +
+  ylab("Diversity value") + 
   #scale_x_discrete(labels=labels) + 
   theme(legend.position = "none")
 
 #ggsave("alpha-faithpd-mucosa-byTreatment.pdf", path = "./results/final-plots", device = pdf, width = 6, height = 5.5, units = "in")
 ```
 
-Sample MB8 is at the very bottom (has one taxa).
+Based on alpha rarefaction and alpha diversity analysis there does appear to be a difference with Day and the significance is strong across all metrics.
 
-Based on alpha rarefaction and alpha diversity analysis there does appear to be a difference with strain (key one) but here it's slight.
+Look at significance of metrics across Treatment (compared to the mean). Will need to compare to Vehicle at some point as well.
+
+```{r}
+p <- plot_richness_estimates(physeq = physeq.filtered, 
+                             erDF = erDF,
+                             "Treatment", 
+                             color = "Day", 
+                             title="Alpha diversity of Treatment compared to Vehicle")
+
+p + geom_boxplot(aes(x=Treatment,
+                     y=value,
+                     color=NULL), alpha=0.1) +
+  stat_compare_means(label = "p.signif", 
+                     #ref.group = "Vehicle",
+                     hide.ns = TRUE,
+                     method = "wilcox.test") +
+  ylab("Diversity value") + 
+  #scale_x_discrete(labels=labels) + 
+  theme(legend.position = "none")
+
+#ggsave("alpha-faithpd-mucosa-byTreatment.pdf", path = "./results/final-plots", device = pdf, width = 6, height = 5.5, units = "in")
+```
+There also appears to be significant differences for Treatment (especially Clindamycin) but not quite as strong. NOTE: Need to also compare this to the vehicle, but code was giving me an error.
+
 
 ## Check for normal distribution 
 
 ### Plot to check normality
 
-Do these look like a normal distribution?
+Do these look like a normal distribution? If p is less than 0.05, then it is not normally distributed and non-parametric tests should be used instead (such as the Wilcoxen-rank sum test).
 
 ```{r }
 par(mfrow = c(2, 3))
@@ -82,4 +108,4 @@ plots <- lapply(c('Chao1', 'Shannon', 'Simpson', 'InvSimpson', 'Observed', 'PD')
          })
 ```
 
-Not a lot of samples but the Shannon looks about right (disregarding the obvious outlier)
+Only the InvSimpson metric passes the normality test, so we should use the Wilcoxen rank sum test above.

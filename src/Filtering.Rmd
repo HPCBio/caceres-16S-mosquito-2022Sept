@@ -2,7 +2,7 @@
 
 ```{r, include=FALSE}
 # at some point this should be moved into bookdown
-source("~/Desktop/hpcbio-git/hergenrother-16S-mouse-2022Sept/src/common_code.R", local = knitr::knit_global())
+source("~/Desktop/hpcbio-git/caceres-16S-mosquito-2022Sept/src/common_code.R", local = knitr::knit_global())
 ```
 
 ```{r}
@@ -38,11 +38,11 @@ Not at the moment, so will skip the following step.
 
 ## Prune out any other samples?
 
-Can use this to filter out outliers if needed, but for now I will not.
+Will remove Infusion samples for now, but can add them back in later.
 
 ```{r }
-# physeq.filtered <- prune_samples(!(sample_names(physeq.filtered) %in% c("MB4", "MB5")), physeq.filtered)
-# physeq.filtered
+ physeq.filtered <- prune_samples(!(sample_data(physeq.filtered)$Density == "Infusion"), physeq.filtered)
+ physeq.filtered
 ```
 
 ## Zero-count taxa
@@ -53,11 +53,11 @@ If we remove samples, there may be some taxa that are no longer present in the s
 table(taxa_sums(physeq.filtered) == 0)
 ```
 
-There are none.
+After removing Infusion samples, 571 are 0 count.
 
 ```{r}
-#physeq.filtered <- subset_taxa(physeq.filtered, taxa_sums(physeq.filtered) > 0)
-#physeq.filtered
+physeq.filtered <- subset_taxa(physeq.filtered, taxa_sums(physeq.filtered) > 0)
+physeq.filtered
 ```
 
 If needed, save these as a separate input for the next steps.
@@ -97,7 +97,7 @@ table(tax_table(physeq.filtered)[,'Domain']) %>% kable
 
 There aren't any non-microbial hits, so no need to remove sequences mis-classified as somehow eukaryotic
 
-There are a few that unclassified across almost all ranks; anything not classified at least to a phylum level are uninformative.  We should go ahead and remove these. 
+There are a few that are unclassified across almost all ranks; anything not classified at least to a phylum level are uninformative.  We should go ahead and remove these. 
 
 How many Phylum are unassigned?  (TRUE means these are unassigned)
 
@@ -105,7 +105,7 @@ How many Phylum are unassigned?  (TRUE means these are unassigned)
 table(is.na(tax_table(physeq.filtered)[,'Phylum'])) %>% kable
 ```
 
-Only 1 is not assigned at the phylum rank.  Export the unassigned sequences to a file.
+22 are not assigned at the phylum rank.  Export the unassigned sequences to a file.
 
 ```{r}
 unasn <- subset_taxa(physeq.filtered, is.na(Phylum))
@@ -155,15 +155,12 @@ Any hits for chloroplast? These are found under the `Class` rank.
 ```{r }
 table(tax_table(physeq.filtered)[,'Order'])['Chloroplast']
 ```
-
-3 chloroplast sequences.  Let's grab these and export to look into further; these are the samples that have chloroplast sequences. 
+No chloroplast sequences found.
 
 ```{r}
-chloros <- subset_taxa(physeq.filtered, Order == 'Chloroplast')
-sample_sums(chloros) %>% magrittr::extract(. > 0)
+# chloros <- subset_taxa(physeq.filtered, Order == 'Chloroplast')
+# sample_sums(chloros) %>% magrittr::extract(. > 0)
 ```
-
-Only in 10 samples and in low amounts (negligible).
 
 
 Any mitochondrial sequences?  
@@ -172,29 +169,27 @@ Any mitochondrial sequences?
 table(tax_table(physeq.filtered)[,'Family'])['Mitochondria']
 ```
 
-There are a couple.
+No mitochrondial sequence found.
 
 ```{r }
 #mitos <- subset_taxa(physeq.filtered, Family == 'Mitochondria')
 #sample_sums(mitos) %>% magrittr::extract(. > 0)
 ```
 
-For the final filtered data, we will remove the chloroplasts and the mitochondrial taxa.
 
 ```{r }
 # remove negative control samples that aren't part of the analysis (water, Zymo)
 #physeq.filtered <- subset_samples(physeq, Treatment != 'Control')
 
 # remove mitochondria
-physeq.filtered <- subset_taxa(physeq.filtered, is.na(Family) | Family != 'Mitochondria')
+#physeq.filtered <- subset_taxa(physeq.filtered, is.na(Family) | Family != 'Mitochondria')
 
 # remove chloroplast
-physeq.filtered <- subset_taxa(physeq.filtered, is.na(Order) | Order != 'Chloroplast')
+#physeq.filtered <- subset_taxa(physeq.filtered, is.na(Order) | Order != 'Chloroplast')
 
-physeq.filtered
+#physeq.filtered
 ```
 
-Note that we have to be a bit careful, as this can inadvertently remove unassigned ranks (those with NA).
 
 ## Remove taxa with 0 counts
 
@@ -288,7 +283,7 @@ We skip this in favor of precedence filtering, but will plot a histogram of samp
 hist(sample_sums(physeq.filtered), breaks = 50)
 ```
 
-Pretty reasonable spread. No samples are below our standard 10k count limit.
+Pretty reasonable spread. However there is one samples below our standard 10k count limit, so may remove this later.
 
 
 ## Basic overview
@@ -314,9 +309,10 @@ ex0 = prune_taxa(myTaxa1, physeq.filtered)
 plot_tree(ex0, label.tips = 'Family',
           ladderize = "left",
           justify = "left",
-          color = 'Treatment'
+          color = 'Extraction_type'
           )
 ```
+Can see that the 50 most abundant ASVs are dominant in water samples, and seeing mostly Arcobacteraceae family in all extraction types.
 
 ```{r}
 saveRDS(physeq.filtered, 'results/physeq.filtered.RDS')

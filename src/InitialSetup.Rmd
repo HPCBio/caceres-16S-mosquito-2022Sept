@@ -1,12 +1,12 @@
 Load functions in "common_code.R"
 ```{r, include=FALSE}
 # at some point this should be moved into bookdown
-source("~/Desktop/hpcbio-git/hergenrother-16S-mouse-2022Sept/src/common_code.R", local = knitr::knit_global())
+source("~/Desktop/hpcbio-git/caceres-16S-mosquito-2022Sept/src/common_code.R", local = knitr::knit_global())
 ```
 
 # Setting up the data and project
 
-Code (not shown in the report) is initialized and loaded here.  We don't include the code in the report but make this available as needed; please see the [Github repository](https://github.com/HPCBio/hergenrother-16S-mouse-2022Sept) for this project for the final version.
+Code (not shown in the report) is initialized and loaded here.  We don't include the code in the report but make this available as needed; please see the [Github repository]() for this project for the final version.
 
 Data from the primary project folder should be downloaded from [here](https://uofi.app.box.com/folder/171910903803) (requires permissions). Note the following assumes all data are in a folder named `2022-Sept-16S`.  Also note that paths in the code will very likely need to be modified to rerun these (this is partly due to how the code and relevant parts of the analysis are sourced).
 
@@ -33,10 +33,15 @@ Load in experimental data on samples (metadata).  Here are the first few rows:
 ```{r}
 library(readxl)
 tmp <- read_tsv('Metadata/Metadata.txt')
-tmp$Treatment <- factor(tmp$Treatment, levels = c("Vehicle","Lolamycin","Amoxicillin","Clindamycin"))
-tmp$Day <- factor(tmp$Day, ordered = TRUE)
-tmp$Replicate <- factor(tmp$Replicate)
-#tmp$Label <- factor(tmp$Label, levels = tmp$Label)
+tmp$Extraction_type <- factor(tmp$Extraction_type, levels = unique(tmp$Extraction_type))
+tmp$Simple_extraction <- factor(tmp$Simple_extraction, levels = unique(tmp$Simple_extraction))
+tmp$Environment <- factor(tmp$Environment, levels = unique(tmp$Environment))
+tmp$Competition <- factor(tmp$Competition, levels = unique(tmp$Competition))
+tmp$Density <- factor(tmp$Density, levels = unique(tmp$Density))
+tmp$Extr_Env_Comp_Den <- factor(tmp$Extr_Env_Comp_Den, levels = unique(tmp$Extr_Env_Comp_Den))
+tmp$Env_Comp_Den <- factor(tmp$Env_Comp_Den, levels = unique(tmp$Env_Comp_Den))
+tmp$Extr_Env <- factor(tmp$Extr_Env, levels = unique(tmp$Extr_Env))
+tmp$Plate <- factor(tmp$Plate, levels = unique(tmp$Plate))
 
 knitr::kable(head(tmp), show_col_types = FALSE)
 ```
@@ -44,11 +49,11 @@ knitr::kable(head(tmp), show_col_types = FALSE)
 We also read in QC so we can layer in whether read abundance plays a role.  We need to do a bit of our own read tracking here (it's not currently in the pipeline but can be added).
 
 ```{r results="asis"}
-track <- read_tsv("2022-Sept-16S/Plain/QC/all.readtracking.txt")
+track <- read_tsv("2022-Sept-16S/Plain/QC/all.readtracking.merged.txt")
 knitr::kable(track, show_col_types = FALSE)
 ```
 
-Very few sequences were lost at any step in DADA2. That's great!
+A decent number of reads were lost during filtering, which was unavoidable. Not much was lost at the other steps, so that's great!
 
 Combine all metadata together for analysis and add back to the class.
 
@@ -56,27 +61,34 @@ Combine all metadata together for analysis and add back to the class.
 tmp2 <- sample_data(right_join(tmp, track, by="SampleID"))
 sample_names(tmp2) <- tmp2$Sample
 sample_names(tmp2)
-
 ```
 
-First, let's load in the taxonomic analysis. We can also try the QIIME taxonomy assignment later if needed. It looks like this:
+Now we can load in the taxonomic analysis, including the QIIME2 version.
 
 ```{r}
-taxtab <- readRDS('2022-Sept-16S/Phyloseq/tax_final.simple.RDS')
+taxtab.d <- readRDS('2022-Sept-16S/Phyloseq/tax_final.simple.RDS')
+library(qiime2R)
+taxtab.q <- read_qza('2022-Sept-16S/Q2taxa/taxonomy.q2-classifier.qza')
 
 # this is needed for some downstream steps
-taxtab[taxtab == 'Unclassified'] <- NA
-knitr::kable(head(taxtab))
+taxtab.d[taxtab.d == 'Unclassified'] <- NA
+knitr::kable(head(taxtab.d))
+
+taxtab.q <- parse_taxonomy(taxtab.q$data, ";", TRUE)
+#There must be a bug in this function as it's not removing "d__" from Domain
+taxtab.q$Kingdom <- substr(taxtab.q$Kingdom,4,100)
+taxtab.q <- as(taxtab.q,"matrix")
+knitr::kable(head(taxtab.q))
 ```
 
-Object summary:
+Object summary (using QIIME2 taxonomy):
 
 ```{r}
-colnames(taxtab) <- c("Domain", "Phylum", "Class", "Order", "Family", "Genus", "Species")
+colnames(taxtab.q) <- c("Domain", "Phylum", "Class", "Order", "Family", "Genus", "Species")
 seqtab.tmp <- readRDS('2022-Sept-16S/Phyloseq/seqtab_final.simple.RDS')
 
 # Remove file ending from rownames
-rownames(seqtab.tmp) <- gsub(".filtered.fastq.gz","", rownames(seqtab.tmp))
+rownames(seqtab.tmp) <- gsub(".R1.filtered.fastq.gz","", rownames(seqtab.tmp))
 # re-order the seqtab.tmp to be in the same order as the metadata
 tmp.m <- match(tmp2$SampleID, rownames(seqtab.tmp))
 seqtab.tmp <- seqtab.tmp[tmp.m,]
@@ -86,20 +98,19 @@ asvs.tmp <- Biostrings::readDNAStringSet('2022-Sept-16S/Plain/Sequences/asvs.md5
 
 physeq <- phyloseq(
   otu_table(seqtab.tmp, taxa_are_rows = F),
-  tax_table(taxtab),
+  tax_table(taxtab.q),
   asvs.tmp,
   tree.tmp)
 
-physeq
-```
-
-
-Here is the sample object summary now:
-
-```{r}
 sample_data(physeq) <- tmp2
 physeq
 ```
+
+Quick check: Is Wolbachia genus present?
+```{r}
+table(tax_table(physeq)[,'Genus'])['Wolbachia']
+```
+No, for both dada2 and QIIME2 classified taxa 
 
 What do the first rows look like?
 

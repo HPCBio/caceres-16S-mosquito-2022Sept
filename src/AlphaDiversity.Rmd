@@ -1,6 +1,6 @@
 ```{r, include=FALSE}
 # at some point this should be moved into bookdown
-source("~/Desktop/hpcbio-git/hergenrother-16S-mouse-2022Sept/src/common_code.R", local = knitr::knit_global())
+source("~/Desktop/hpcbio-git/caceres-16S-mosquito-2022Sept/src/common_code.R", local = knitr::knit_global())
 ```
 
 ```{r}
@@ -13,14 +13,15 @@ Check alpha diversity stats.  Note we haven't performed any additional filtering
 
 > You must use untrimmed, non-normalized count data for meaningful results, as many of these estimates are highly dependent on the number of singletons. You can always trim the data later on if needed, just not before using this function.
 
-## Overall
+## Normalize and calculate alpha diversity 
+
 
 We'll calculate some initial alpha diversity metrics.
 
 ```{r}
 # all six measures: Observed, Chao1, ACE, Shannon, Simpson, Inv. Simpson, Fisher
 erDF <- estimate_richness(physeq.filtered, 
-                          measures = c('Observed', 'Chao1', 'ACE', 'Shannon', 'Simpson', 'InvSimpson'))
+                          measures = c('Observed', 'Chao1', 'Shannon', 'Simpson', 'InvSimpson'))
 
 # add Faith's PD, this is a simple wrapper to format everything correctly
 pd <- estimate_pd(physeq.filtered)
@@ -42,56 +43,6 @@ We'll check the overall measures for alpha diversity across different groups.  T
 * **Fisher** - Relationship between the number of species and the abundance of each species.  From the `vegan` package, function `diversity`. 
 * **Faith's PD** - Sum of the total phylogenetic branch length for one or multiple samples.  From the `picante` package, function `pd`. 
 
-Look at significance of metrics across Day/time (compared to mean)
-
-```{r}
-p <- plot_richness_estimates(physeq = physeq.filtered, 
-                             erDF = erDF,
-                             "Day", 
-                             color = "Treatment", 
-                             title="Alpha diversity across time")
-
-p + geom_boxplot(aes(x=Day,
-                     y=value,
-                     color=NULL), alpha=0.1) +
-  stat_compare_means(label = "p.signif",
-                    # ref.group = "0",
-                     hide.ns = TRUE,
-                     method = "wilcox.test") +
-  ylab("Diversity value") + 
-  #scale_x_discrete(labels=labels) + 
-  theme(legend.position = "none")
-
-#ggsave("alpha-faithpd-mucosa-byTreatment.pdf", path = "./results/final-plots", device = pdf, width = 6, height = 5.5, units = "in")
-```
-
-Based on alpha rarefaction and alpha diversity analysis there does appear to be a difference with Day and the significance is strong across all metrics.
-
-Look at significance of metrics across Treatment (compared to the mean). Will need to compare to Vehicle at some point as well.
-
-```{r}
-p <- plot_richness_estimates(physeq = physeq.filtered, 
-                             erDF = erDF,
-                             "Treatment", 
-                             color = "Day", 
-                             title="Alpha diversity of Treatment compared to Vehicle")
-
-p + geom_boxplot(aes(x=Treatment,
-                     y=value,
-                     color=NULL), alpha=0.1) +
-  stat_compare_means(label = "p.signif", 
-                     #ref.group = "Vehicle",
-                     hide.ns = TRUE,
-                     method = "wilcox.test") +
-  ylab("Diversity value") + 
-  #scale_x_discrete(labels=labels) + 
-  theme(legend.position = "none")
-
-#ggsave("alpha-faithpd-mucosa-byTreatment.pdf", path = "./results/final-plots", device = pdf, width = 6, height = 5.5, units = "in")
-```
-There also appears to be significant differences for Treatment (especially Clindamycin) but not quite as strong. NOTE: Need to also compare this to the vehicle, but code was giving me an error.
-
-
 ## Check for normal distribution 
 
 ### Plot to check normality
@@ -108,4 +59,51 @@ plots <- lapply(c('Chao1', 'Shannon', 'Simpson', 'InvSimpson', 'Observed', 'PD')
          })
 ```
 
-Only the InvSimpson metric passes the normality test, so we should use the Wilcoxen rank sum test above.
+Chao1, Observed, & Faith PD are normal. The others are skewed. May need to split up our plot into a parametric test for the former metrics and nonparametric for the other metrics
+
+Look at significance of metrics across Env_Comp_Den using Kruskal Wallace test.
+
+```{r}
+p <- plot_richness_estimates(physeq = physeq.filtered, 
+                             erDF = erDF,
+                             "Env_Comp_Den", 
+                             color = "Extraction_type", 
+                             title="Alpha diversity of Env_Comp_Den (Kruskal Wallace test)")
+
+p + geom_boxplot(aes(x=Env_Comp_Den,
+                     y=value,
+                     color=NULL), alpha=0.1) +
+  stat_compare_means(label = "p.signif",
+                #     ref.group = "Infusion",
+                     hide.ns = TRUE,
+                     method = "kruskal.test") +
+  ylab("Diversity value") 
+  #scale_x_discrete(labels=labels) + 
+  #theme(legend.position = "none")
+
+#ggsave("alpha-allMetrics-byEnv_Comp_Den.pdf", path = "./results/final-plots", device = "pdf", width = 8, height = 5.5, units = "in")
+```
+
+In the metrics that consider abundance and richness (Shannon, Simpson, InvSimpson), all groups are significant. Technically the other metrics showed a normal distribution and would be better suited for an anova test. This can be added later.
+
+
+```{r}
+p <- plot_richness_estimates(physeq = physeq.filtered, 
+                             erDF = erDF,
+                             "Density", 
+                             color = "Extraction_type", 
+                             title="Alpha diversity of Density (Kruskal Wallace test)")
+
+p + geom_boxplot(aes(x=Density,
+                     y=value,
+                     color=NULL), alpha=0.1) +
+  stat_compare_means(label = "p.signif",
+                #     ref.group = "Infusion",
+                     hide.ns = TRUE,
+                     method = "kruskal.test") +
+  ylab("Diversity value") 
+  #scale_x_discrete(labels=labels) + 
+  #theme(legend.position = "none")
+
+#ggsave("alpha-allMetrics-byEnv_Comp_Den.pdf", path = "./results/final-plots", device = "pdf", width = 8, height = 5.5, units = "in")
+```

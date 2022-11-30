@@ -1,6 +1,6 @@
 ```{r, include=FALSE}
 # at some point this should be moved into bookdown
-source("~/Desktop/hpcbio-git/hergenrother-16S-mouse-2022Sept/src/common_code.R", local = knitr::knit_global())
+source("~/Desktop/hpcbio-git/caceres-16S-mosquito-2022Sept/src/common_code.R", local = knitr::knit_global())
 ```
 
 ```{r}
@@ -17,15 +17,22 @@ Overall compositional summary (stacked bar plots) for all unfiltered samples.  I
 physeq.prop <- transform_sample_counts(physeq, function(x) x/sum(x) )
 sample_data(physeq.prop)$SampleSums <- sample_sums(physeq)
 
+#Pull out top 20 ASVs
+#physeq.subset <- names(sort(taxa_sums(physeq), decreasing=TRUE))[1:20]
+#physeq.plot <- prune_taxa(physeq.subset, physeq.prop)
+
 #Pull out top 20 families
-physeq.subset <- tax_glom(physeq.prop, taxrank = "Family")
-tax.ordered <- names(sort(taxa_sums(physeq.prop), TRUE)[1:20])
-physeq.plot <- subset_taxa(physeq.prop, taxa_names(physeq.prop) %in% tax.ordered)
+physeq.subset <- tax_glom(physeq, taxrank = "Family")
+tax.ordered <- names(sort(taxa_sums(physeq), TRUE)[1:20])
+physeq.plot <- subset_taxa(physeq.prop, taxa_names(physeq) %in% tax.ordered)
 ```
 
+There are no Species-level assignments for top 20 families, and the top 20 families only make up, at most, 20% of the total abundance. This indicates that we have very diverse communities here with high taxonomic resolution. This is not surprising considering that we have 18,538 ASVs to start with. It will be beneficial to glom ASVs at the species or genus level to reduce this high resolution we're seeing.
+
+
 ```{r, results='asis', fig.keep='all', message = FALSE, warning = FALSE, echo = FALSE}
-kc <- c("SampleID","Label","Treatment","Day","Replicate")
-ranks <- c("Class", "Order", "Family", "Genus", "Species")
+#kc <- c("SampleID","Label","Env_Comp_Den", "Replicate")
+ranks <- c("Class", "Order", "Family", "Genus")
 plots <- lapply(ranks, function (x) { 
 
   #Plot relative abundance
@@ -37,7 +44,7 @@ plots <- lapply(ranks, function (x) {
         axis.text.x = element_text(size = 5),
         axis.ticks.x = element_blank()) +
         ylab("Relative Abundance") +
-        facet_wrap(~Treatment, scales = "free_x")
+        facet_wrap(~Env_Comp_Den, scales = "free_x")
   
 #p <- composition_df(physeq, x, minprop = 0.05, keepcols = kc)
 #p + facet_wrap(~Location, scales = "free_x", nrow = 1)

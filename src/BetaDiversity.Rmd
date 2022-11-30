@@ -1,28 +1,75 @@
 ```{r, include=FALSE}
-source("~/research/biotech/young-chae_kim/2021-Fall-Microbiome/src/common_code.R", local = knitr::knit_global())
+source("~/Desktop/hpcbio-git/caceres-16S-mosquito-2022Sept/src/common_code.R", local = knitr::knit_global())
 ```
 
 ```{r}
-physeq.prev <- readRDS('~/research/biotech/young-chae_kim/2021-Fall-Microbiome/results/phyloseq.prevfiltered.males.RDS')
+physeq.prev <- readRDS('results/phyloseq.prevfiltered.RDS')
 ```
 
 # Beta diversity
 
-Initial beta diversity heatmap on the glommed samples information. 
+Beta diversity tells us how much diversity pairwise samples share with one another. Beta diversity metrics assign a value to that shared diversity. Bray-Curtis is a common non-phylogenetic metric used to compare sample composition based on presence and abundance of ASVs. Weighted Unifrac is a common phylogenetic metric that also compares phylogenetic distance of the shared diversity between two samples. If you have a preferred metric other than these, I can add them in. 
+
+To plot these measurements we have to choose an appropriate ordination method. PCA is NOT recommended for microbial data, since it is not linear, unless it is Hellinger-transformed. PCoA and NMDS are recommended for unconstrained ordination (axes are not constrained by sample metadata), while the former is used in most circumstances. CA is recommended for constrained ordination, however rare data could have an unduly large influence on CA. See [Qian et al., 2020](`https://journals.lww.com/cmj/Fulltext/2020/08050/A_guide_to_human_microbiome_research__study.10.aspx`) for more details. For these reasons, I'll stick with PCoA unless requested otherwise.
+
+## Heatmaps
+Below is an initial beta diversity heatmap based on the prevalence filtered and tip-glommed samples at the Family level (y-axis). This is based on PCoA values (recommended for 16S data) and the Bray-curtis (non-phylogenetic) metric. Data is log2 transformed. Note that this does show all 231 ASVs on the y-axis, which means there is some redundancy in Family taxa on that axis. 
 
 ```{r }
 p <- plot_heatmap(physeq.prev,
                   method = "PCoA",
                   distance = "bray",
                   taxa.label = "Family",
-                  sample.label = "SampleID",
-                  trans = log_trans(2))
+                  sample.label = "Label",
+                  trans = log_trans(2),
+                  title = "PCoA Bray-Curtis Heatmap")
 p
 ```
 
-## Relative proportion
+This heatmap looks very promising. All G's are on the right, and all GN's are on the left. These further separate by water versus mosquito larvae. Let's also try it using a phylogenetic metric, weighted unifrac.
 
-Transform data to relative proportions (no prior added).  We have the option to change this later.
+```{r }
+p <- plot_heatmap(physeq.prev,
+                  method = "PCoA",
+                  distance = "wunifrac",
+                  taxa.label = "Family",
+                  sample.label = "Label",
+                  trans = log_trans(2),
+                  title = "PCoA Weighted Unifrac Heatmap")
+p
+```
+This looks the same, which tells us this pattern is robust to differing metrics.
+
+Here I have made the same kind of heatmap but with the data glommed at the Family level, so there is no redundancy on the y-axis. However, this does have the downside of grouping all NA taxa into the same group, which is not ideal either, so I've labeled the NA taxa by their Order instead.
+
+```{r}
+#Agglomerate taxa and species level to remove redundancy
+physeq.heat.glom <- tax_glom(physeq.prev, taxrank = "Family", NArm = FALSE)
+
+# Family is not NA
+no.na <- !is.na(tax_table(physeq.heat.glom)[,"Family"])
+
+#Family level in beneficial has a couple NAs that need to be renamed to Family
+tax_table(physeq.heat.glom)[!no.na][,"Family"] = paste("[Order]", 
+                                                      tax_table(physeq.heat.glom)[!no.na][,"Order"])
+```
+
+```{r }
+p <- plot_heatmap(physeq.heat.glom,
+                  method = "PCoA",
+                  distance = "bray",
+                  taxa.label = "Family",
+                  sample.label = "Label",
+                  trans = log_trans(2),
+                  title = "PCoA Bray-Curtis Heatmap - Glommed at Family Level")
+p
+```
+This still separates by water vs larvae, but it no longer separates as nicely by environment, so I would not recommend using the above plot.
+
+
+## Normalization & PCoA plots
+
+Transform data to relative proportions (no prior added).  While not as sophisticated as other normalization methods it is currently the best method for normalizing library sizes while still maintaining community structure patterns. See [McKnight et al., 2018](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.13115) for more information.
 
 ```{r }
 #All samples
@@ -65,15 +112,13 @@ sample_data(physeq.prop)$SampleSums <- sample_sums(physeq.prev)
 # mucosa.clr2
 ```
 
-## Set active instance
-
-Set the active normalization type (Prop for now)
+Set the active normalization type (proportion for now)
 
 ```{r}
 physeq.active <- physeq.prop
 ```
 
-### Bray-Curtis
+### Bray Curtis metric
 
 ```{r }
 set.seed(1234)
@@ -82,96 +127,286 @@ finalPhyseq.ord <- ordinate(physeq.active, "PCoA", "bray")
 p1 = plot_ordination(physeq.active,
                      finalPhyseq.ord,
                      type="samples",
-                     color="Strain",
-                     shape = "Sex",
+                     color="Environment",
+                     shape = "Simple_extraction",
                      title="Samples") + geom_point(size = 2.5)
-ggplotly(p1 + ggtitle("PCoA, Bray Curtis distance"))
+p1 + ggtitle("PCoA, Bray Curtis distance")
+#ggplotly(p1 + ggtitle("PCoA, Bray Curtis distance"))
 #+  scale_fill_viridis_d()
 ```
+
+Very clearly splitting by Environment and extraction type (simplified to water vs larvae). Larvae samples also cluster more tightly than water samples, which isn't too surprising.
+
+Let's try highlighting Density and Competition...
+
+```{r }
+set.seed(1234)
+
+finalPhyseq.ord <- ordinate(physeq.active, "PCoA", "bray")
+p1 = plot_ordination(physeq.active,
+                     finalPhyseq.ord,
+                     type="samples",
+                     color="Density",
+                     shape = "Competition",
+                     title="Samples") + geom_point(size = 2.5)
+p1 + ggtitle("PCoA, Bray Curtis distance")
+#ggplotly(p1 + ggtitle("PCoA, Bray Curtis distance"))
+#+  scale_fill_viridis_d()
+```
+Infusion samples definitely separate (centered in this plot), but everything else seems quite mixed.
+
+
+Check to see if number of sequences per sample (input) affects diversity
 
 ```{r }
 p1 <- plot_ordination(physeq.active,
                      finalPhyseq.ord,
                      type="samples",
                      color="input",
-                     label="SampleID",
+                     label="Label",
                      title="Samples") + geom_point(size = 2.5) +
   ggtitle("PCoA, Bray Curtis distance") 
 ggplotly(p1)
 ```
 
-Nothing odd here. 
+Nothing odd related to number of input sequences.
 
-### Weighted UniFrac
 
-Let's look at Weighted UniFrac
+### Weighted UniFrac metric
+
+Let's look at Weighted UniFrac now.
 
 ```{r}
-finalPhyseq.ord <- ordinate(physeq.active, "NMDS", "wunifrac")
+finalPhyseq.ord <- ordinate(physeq.active, "PCoA", "wunifrac")
 p1 = plot_ordination(physeq.active,
                      finalPhyseq.ord,
                      type="samples",
-                     color="Strain",
-                     shape = "Sex",
-                     label = "SampleID",
-                     title="Samples") + geom_point(size = 2.5)
+                     color="Environment",
+                     shape = "Simple_extraction",
+                    # label = "Label",
+                     title="PCoA, Weighted Unifrac distance") + geom_point(size = 2.5)
 #p1 + scale_color_brewer(palette="Spectral")
 ggplotly(p1)
 ```
+Very similar pattern as Bray-Curtis but not quite as strong. I bit more mixing between G & GN water samples. Since weighted unifrac takes phylogenetic distance into account this demonstrates that the phylogenetic distance of the ASVs (and potentially functional similarity) is a bit more close for some of the water/GN samples.
+
+Let's also highlight the other metadata of interest:
+
+```{r}
+finalPhyseq.ord <- ordinate(physeq.active, "PCoA", "wunifrac")
+p1 = plot_ordination(physeq.active,
+                     finalPhyseq.ord,
+                     type="samples",
+                     color="Competition",
+                     shape = "Density",
+                    # label = "Label",
+                     title="PCoA, Weighted Unifrac distance") + geom_point(size = 2.5)
+#p1 + scale_color_brewer(palette="Spectral")
+ggplotly(p1)
+```
+Infusion still separates from the others but looks more phylogenetically similar to water/G samples.
+
 
 ## PERMANOVA
 
-Let's try PERMANOVA on this using the implementation in `vegan` (`adonis2`).
+Let's try PERMANOVA on this using the implementation in `vegan` (`adonis2`). This is the most popular and powerful test  recommended for microbial studies. P-value indicates whether the diversity between different communities is statistically significant. R^2 indicates how much of the total variance can be explained by grouping factor.
+
+### Bray-Curtis 
+
+Results below are for the Bray-Curtis metric, but I also post results of Weighted-Unifrac after this. I also list results for complex models as well as using the combined metadata column 
 
 ```{r }
 finalPhyseq.meta <- as(sample_data(physeq.active), "data.frame")
 finalPhyseq.prop.dist.bc <- phyloseq::distance(physeq.active, method = "bray")
 ```
 
+
+Environment x Competition x Density
 ```{r}
 set.seed(12345)
-adonis2(finalPhyseq.prop.dist.bc ~ Strain,
+adonis2(finalPhyseq.prop.dist.bc ~ Environment * Competition * Density,
        data = finalPhyseq.meta)
 ```
 
-<!-- Significant result using both strain and sex, with the interaction also significant. -->
-
-<!-- ```{r } -->
-<!-- beta <- betadisper(finalPhyseq.prop.dist.bc, finalPhyseq.meta$Sex) -->
-<!-- permutest(beta) -->
-<!-- ``` -->
-
-<!-- physeq.prop: Good! This suggests that any issues with heteroscedasticity aren't likely to be significant.  What does this dispersion look like? -->
-<!-- physeq.clr2: heteroscedasticity is significant. -->
-
-<!-- ```{r } -->
-<!-- plot(beta, main = "beta dispersion estimates between sexes") -->
-<!-- ``` -->
-
-What about Strain?
+All three are considered significant, however these only contribute to ~25% of the variance (R2). How about the metadata column (Env_Comp_Den) by itself?
 
 ```{r}
-beta <- betadisper(finalPhyseq.prop.dist.bc, finalPhyseq.meta$Strain)
+set.seed(12345)
+adonis2(finalPhyseq.prop.dist.bc ~ Env_Comp_Den,
+       data = finalPhyseq.meta)
+```
+Significant.
+
+
+Extraction x Environment x Competition x Density
+```{r}
+set.seed(12345)
+adonis2(finalPhyseq.prop.dist.bc ~ Simple_extraction * Environment * Competition * Density,
+       data = finalPhyseq.meta)
+```
+
+All 4 are significant, including some of the interactions. Together these do account for ~69% of the variance (R2), so this seems like a more complete model. Let's try just the metadata column (Extr_Env_Comp_Den).
+
+```{r}
+set.seed(12345)
+adonis2(finalPhyseq.prop.dist.bc ~ Extr_Env_Comp_Den,
+       data = finalPhyseq.meta)
+```
+Significant.
+
+For good measure, let's also add Plate to the above model.
+```{r}
+set.seed(12345)
+adonis2(finalPhyseq.prop.dist.bc ~ Simple_extraction * Environment * Competition * Density * Plate,
+       data = finalPhyseq.meta)
+```
+Adding plate increased the accounted variance by maybe 1% and it is also significant. Looking at the metadata it does seem that Plate is a confounding variable and is very closely related to extraction type. 
+
+
+#### Heteroscedasicity test
+Now let's test for differences between group dispersion. Ideally, these tests won't be significant, as heteroskedasticity can can affect the validity of a PERMANOVA.
+
+Env_Comp_Den
+```{r}
+beta <- betadisper(finalPhyseq.prop.dist.bc, finalPhyseq.meta$Env_Comp_Den)
 permutest(beta)
 ```
 
-Not significant but this is also underpowered and pretty variable based on the pattern.
+Env_Comp_Den is not heteroscedastic! Great.
+
+
+Extr_Env_Comp_Den
+```{r}
+beta <- betadisper(finalPhyseq.prop.dist.bc, finalPhyseq.meta$Extr_Env_Comp_Den)
+permutest(beta)
+```
+
+Extr_Env_Comp_Den IS heteroscedastic, so this could affect the results of a PERMANOVA. I suspect that extraction type is making the data unbalanced, so we could separate the larvae from the water samples and try this again.
+
+
 
 ```{r}
-plot(beta, main = "beta dispersion estimates between strains")
+plot(beta, main = "beta dispersion estimates between days")
 ```
 
-I suspect the big difference here is based on two factors: 1) unbalanced groups, and 2) there are two samples which always seem to be significantly different.
 
-## ANOSIM
 
-Let's run ANOSIM on the individual factors.  This test seems to have odd issues with stratification with some factors, but as stratifying based on tissue or subject ID seems to have very little effect on significance I will leave it out here.
+### Weighted Unifrac
 
 ```{r }
-finalPhyseq.prop.ano <- anosim(finalPhyseq.prop.dist.bc, finalPhyseq.meta$Strain)
-finalPhyseq.prop.ano
+finalPhyseq.meta <- as(sample_data(physeq.active), "data.frame")
+finalPhyseq.prop.dist.bc <- phyloseq::distance(physeq.active, method = "wunifrac")
+```
+
+
+Environment x Competition x Density
+```{r}
+set.seed(12345)
+adonis2(finalPhyseq.prop.dist.bc ~ Environment * Competition * Density,
+       data = finalPhyseq.meta)
+```
+
+All three are considered significant, however these only contribute to ~25% of the variance (R2). How about the metadata column (Env_Comp_Den) by itself?
+
+```{r}
+set.seed(12345)
+adonis2(finalPhyseq.prop.dist.bc ~ Env_Comp_Den,
+       data = finalPhyseq.meta)
+```
+Significant.
+
+
+Extraction x Environment x Competition x Density
+```{r}
+set.seed(12345)
+adonis2(finalPhyseq.prop.dist.bc ~ Simple_extraction * Environment * Competition * Density,
+       data = finalPhyseq.meta)
+```
+
+All 4 are significant, including some of the interactions. Together these do account for ~80% of the variance (R2), a little higher than Bray-Curtis. Let's try just the metadata column (Extr_Env_Comp_Den).
+
+```{r}
+set.seed(12345)
+adonis2(finalPhyseq.prop.dist.bc ~ Extr_Env_Comp_Den,
+       data = finalPhyseq.meta)
+```
+Significant.
+
+For good measure, let's also add Plate to the above model.
+```{r}
+set.seed(12345)
+adonis2(finalPhyseq.prop.dist.bc ~ Simple_extraction * Environment * Competition * Density * Plate,
+       data = finalPhyseq.meta)
+```
+
+Everything is significant and accounts for ~83% of the variance (3% more). It seems that Plate is a confounding variable. It is very closely related to extraction type and cannot be completely disentangled from it.
+
+#### Heteroscedasicity test
+Now let's test for differences between group dispersion. Ideally, these tests won't be significant, as heteroskedasticity can can affect the validity of a PERMANOVA.
+
+Env_Comp_Den
+```{r}
+beta <- betadisper(finalPhyseq.prop.dist.bc, finalPhyseq.meta$Env_Comp_Den)
+permutest(beta)
+```
+
+Env_Comp_Den is not heteroscedastic! Great.
+
+
+Extr_Env_Comp_Den
+```{r}
+beta <- betadisper(finalPhyseq.prop.dist.bc, finalPhyseq.meta$Extr_Env_Comp_Den)
+permutest(beta)
+```
+
+Extr_Env_Comp_Den IS less heteroscedastic than the Bray-Curtis results, but still significant. 
+
+
+Let's visualize
+```{r}
+plot(beta, main = "beta dispersion estimates between days")
+```
+
+
+### Test larvae only (using Weighted Unifrac)
+
+```{r}
+physeq.lar <- prune_samples(sample_data(physeq.active)$Simple_extraction == "L", physeq.active)
+physeq.wat <- prune_samples(sample_data(physeq.active)$Simple_extraction == "W", physeq.active)
 ```
 
 ```{r }
-plot(finalPhyseq.prop.ano, cex.axis = 0.6)
+finalPhyseq.meta <- as(sample_data(physeq.lar), "data.frame")
+finalPhyseq.prop.dist.bc <- phyloseq::distance(physeq.lar, method = "wunifrac")
+```
+
+
+Environment x Competition x Density
+```{r}
+set.seed(12345)
+adonis2(finalPhyseq.prop.dist.bc ~ Environment * Competition * Density,
+       data = finalPhyseq.meta)
+```
+All 3 are significant and this does increase R2 is around 43%
+
+Environment x Competition x Density x Plate
+```{r}
+set.seed(12345)
+adonis2(finalPhyseq.prop.dist.bc ~ Environment * Competition * Density * Plate,
+       data = finalPhyseq.meta)
+```
+
+Adding Plate increases significance for all 4, and increases R2 to ~59%. 
+
+Heteroscedasticity
+```{r}
+beta <- betadisper(finalPhyseq.prop.dist.bc, finalPhyseq.meta$Env_Comp_Den)
+permutest(beta)
+```
+
+Env_Comp_Den is still not heteroscedastic, but we should add Plate to this.
+
+Let's visualize
+```{r}
+plot(beta, main = "beta dispersion estimates between days")
 ```

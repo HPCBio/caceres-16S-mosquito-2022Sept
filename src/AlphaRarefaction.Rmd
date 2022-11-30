@@ -2,7 +2,7 @@
 
 ```{r, include=FALSE}
 # at some point this should be moved into bookdown
-source("~/Desktop/hpcbio-git/hergenrother-16S-mouse-2022Sept/src/common_code.R", local = knitr::knit_global())
+source("~/Desktop/hpcbio-git/caceres-16S-mosquito-2022Sept/src/common_code.R", local = knitr::knit_global())
 ```
 
 ```{r}
@@ -13,25 +13,25 @@ Let's check whether we're adequately capturing diversity.  This is a simple alph
 
 ```{r, include=FALSE}
 p <- suppressMessages(ranacapa::ggrare(physeq.filtered, step = 1000,
-            color = "Treatment",
-            label = "Label",
+            color = "Extraction_type",
+           # label = "Label",
             se = FALSE,
             plot = FALSE,
             ))
 ```
 
 ```{r}
-p + ggtitle("Alpha Rarefaction")
-ggplotly()
+p <- p + ggtitle("Alpha Rarefaction")
+ggplotly(p)
 ```
 
-Promising differences between strains.
+Promising differences in the amount of alpha diversity between extraction types. Lines don't plataeu as well as I'd like, but with 18,000+ ASVs this also isn't unexpected.
 
 ```{r}
-p <- p + facet_wrap(~Treatment) + ggtitle("Alpha Rarefaction by Treatment")  # theme(legend.position = c(0.8, 0.2))
+p <- p + facet_wrap(~Density) + ggtitle("Alpha Rarefaction by Density")  # theme(legend.position = c(0.8, 0.2))
 
 ggplotly(p)
 #ggsave("alpha-rarefaction-byTreatment-separatedbyTreatment.pdf", path = "./results/final-plots", device = pdf, width = 7.5, height = 5, units = "in")
 ```
 
-Rarefaction looks pretty decent. There may be a few samples that didn't plateau (not all diversity seems to have been captured)
+Interesting that richness diverges for larvae versus water more in the Density 20 group.

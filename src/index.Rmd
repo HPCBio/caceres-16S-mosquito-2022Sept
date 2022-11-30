@@ -1,5 +1,5 @@
 ---
-title: "Hergenrother 16S analysis"
+title: "Cáceres V3-V4 16S analysis"
 author: "Jessica Holmes & Chris Fields"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 site: bookdown::bookdown_site
@@ -9,4 +9,4 @@ output:
 
 # Introduction
 
-This workbook describes the analysis of microbiome samples from mouse fecal samples. The experimental design includes 4 treatments (Amoxicillin, Clindamycin, Lolamycin, Vehicle), 4 time points (Day 0, 7, 10, & 31), and 6 replicates of each treatment X day. The goal is to study the antibiotic effects vs. vehicle (control) over time.
+This workbook describes the analysis of microbiome samples from mosquito and water samples.

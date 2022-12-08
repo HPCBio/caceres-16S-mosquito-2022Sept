@@ -1,14 +1,14 @@
-Load functions in "common_code.R"
 ```{r, include=FALSE}
+# Load functions in "common_code.R"
 # at some point this should be moved into bookdown
 source("~/Desktop/hpcbio-git/caceres-16S-mosquito-2022Sept/src/common_code.R", local = knitr::knit_global())
 ```
 
 # Setting up the data and project
 
-Code (not shown in the report) is initialized and loaded here.  We don't include the code in the report but make this available as needed; please see the [Github repository]() for this project for the final version.
+Code (not shown in the report) is initialized and loaded here.  We don't include the code in the report but make this available as needed; please see the [Github repository](https://github.com/HPCBio/caceres-16S-mosquito-2022Sept/tree/main/src) for this project for the final version.
 
-Data from the primary project folder should be downloaded from [here](https://uofi.app.box.com/folder/171910903803) (requires permissions). Note the following assumes all data are in a folder named `2022-Sept-16S`.  Also note that paths in the code will very likely need to be modified to rerun these (this is partly due to how the code and relevant parts of the analysis are sourced).
+Data from the primary project folder should be downloaded from [here](https://uofi.box.com/s/p90oz17dhblb2vhbcva3cdhu1fzbvake) (requires permissions). Note the following assumes all data are in a folder named `2022-Sept-16S`.  Also note that paths in the code will very likely need to be modified to rerun these (this is partly due to how the code and relevant parts of the analysis are sourced).
 
 ```{r, echo=FALSE}
 library(knitr)
@@ -30,7 +30,7 @@ There is one run with all of the data.  Load it in along with the relevant tree 
 
 Load in experimental data on samples (metadata).  Here are the first few rows:
 
-```{r}
+```{r, show_col_types = FALSE}
 library(readxl)
 tmp <- read_tsv('Metadata/Metadata.txt')
 tmp$Extraction_type <- factor(tmp$Extraction_type, levels = unique(tmp$Extraction_type))
@@ -48,7 +48,7 @@ knitr::kable(head(tmp), show_col_types = FALSE)
 
 We also read in QC so we can layer in whether read abundance plays a role.  We need to do a bit of our own read tracking here (it's not currently in the pipeline but can be added).
 
-```{r results="asis"}
+```{r results="asis", show_col_types = FALSE}
 track <- read_tsv("2022-Sept-16S/Plain/QC/all.readtracking.merged.txt")
 knitr::kable(track, show_col_types = FALSE)
 ```
@@ -63,7 +63,9 @@ sample_names(tmp2) <- tmp2$Sample
 sample_names(tmp2)
 ```
 
-Now we can load in the taxonomic analysis, including the QIIME2 version.
+Now we can load in the taxonomic analyses. I tried dada2's and QIIME2' taxonomic classifiers and compare them below. QIIME2 is more lenient with species-level assignments, but overall I did not notice a huge difference between QIIME2's and dada2's taxonomy assignments, except for the species rank. In this report I present QIIME2's results, but it can easily be switched.
+
+DADA2: Proportion of ASVs that are unassigned at each rank
 
 ```{r}
 taxtab.d <- readRDS('2022-Sept-16S/Phyloseq/tax_final.simple.RDS')
@@ -72,16 +74,36 @@ taxtab.q <- read_qza('2022-Sept-16S/Q2taxa/taxonomy.q2-classifier.qza')
 
 # this is needed for some downstream steps
 taxtab.d[taxtab.d == 'Unclassified'] <- NA
-knitr::kable(head(taxtab.d))
 
+# note this test checks if the rank is NA; if the rank is assigned 'Unclassified' modify the term here
+ranks <- data.frame(apply(taxtab.d, 2, 
+                          function(x) label_percent(accuracy = 0.01) (sum( is.na(x) )/length(x) ) ))
+colnames(ranks) <- c("Perc.Unclassified")
+ranks %>% kable
+```
+
+
+QIIME2: Proportion of ASVs that are unassigned at each rank
+
+```{r}
 taxtab.q <- parse_taxonomy(taxtab.q$data, ";", TRUE)
 #There must be a bug in this function as it's not removing "d__" from Domain
 taxtab.q$Kingdom <- substr(taxtab.q$Kingdom,4,100)
 taxtab.q <- as(taxtab.q,"matrix")
+# note this test checks if the rank is NA; if the rank is assigned 'Unclassified' modify the term here
+ranks <- data.frame(apply(taxtab.q, 2, 
+                          function(x) label_percent(accuracy = 0.01) (sum( is.na(x) )/length(x) ) ))
+colnames(ranks) <- c("Perc.Unclassified")
+ranks %>% kable
+```
+
+Preview of QIIME2 taxonomy table
+
+```{r}
 knitr::kable(head(taxtab.q))
 ```
 
-Object summary (using QIIME2 taxonomy):
+Here is a summary of the initial phyloseq object using QIIME2 taxonomy assignments. Note that the Phyloseq package uses the term "OTU" to describe features, but since we used dada2 to create the feature table, we actually have ASVs (Amplicon Sequence Variants), which are essentially 100% OTUs. So anywhere you see the term OTU, remember that these are actually ASVs.
 
 ```{r}
 colnames(taxtab.q) <- c("Domain", "Phylum", "Class", "Order", "Family", "Genus", "Species")
@@ -107,12 +129,15 @@ physeq
 ```
 
 Quick check: Is Wolbachia genus present?
+
 ```{r}
 table(tax_table(physeq)[,'Genus'])['Wolbachia']
 ```
+
 No, for both dada2 and QIIME2 classified taxa 
 
-What do the first rows look like?
+
+What do the first rows of our final sample data table look like?
 
 ```{r results="asis"}
 sample_data(physeq) %>% as("data.frame") %>% head %>% knitr::kable()

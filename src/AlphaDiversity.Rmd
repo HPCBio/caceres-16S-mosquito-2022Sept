@@ -18,7 +18,7 @@ Check alpha diversity stats.  Note we haven't performed any additional filtering
 
 We'll calculate some initial alpha diversity metrics.
 
-```{r}
+```{r echo=FALSE, message=FALSE}
 # all six measures: Observed, Chao1, ACE, Shannon, Simpson, Inv. Simpson, Fisher
 erDF <- estimate_richness(physeq.filtered, 
                           measures = c('Observed', 'Chao1', 'Shannon', 'Simpson', 'InvSimpson'))
@@ -59,15 +59,15 @@ plots <- lapply(c('Chao1', 'Shannon', 'Simpson', 'InvSimpson', 'Observed', 'PD')
          })
 ```
 
-Chao1, Observed, & Faith PD are normal. The others are skewed. May need to split up our plot into a parametric test for the former metrics and nonparametric for the other metrics
+Chao1, Observed, & Faith PD are normal. The others are skewed. Using non-parametric tests in the visualizations below. Parametric tests were causing errors, but I can revisit them.
 
-Look at significance of metrics across Env_Comp_Den using Kruskal Wallace test.
+Look at significance of metrics across Env_Comp_Den using Kruskal Wallace test (non-parametric ANOVA).
 
 ```{r}
 p <- plot_richness_estimates(physeq = physeq.filtered, 
                              erDF = erDF,
                              "Env_Comp_Den", 
-                             color = "Extraction_type", 
+                             color = "Simple_extraction", 
                              title="Alpha diversity of Env_Comp_Den (Kruskal Wallace test)")
 
 p + geom_boxplot(aes(x=Env_Comp_Den,
@@ -84,14 +84,16 @@ p + geom_boxplot(aes(x=Env_Comp_Den,
 #ggsave("alpha-allMetrics-byEnv_Comp_Den.pdf", path = "./results/final-plots", device = "pdf", width = 8, height = 5.5, units = "in")
 ```
 
-In the metrics that consider abundance and richness (Shannon, Simpson, InvSimpson), all groups are significant. Technically the other metrics showed a normal distribution and would be better suited for an anova test. This can be added later.
+In the metrics that consider abundance and richness (Shannon, Simpson, InvSimpson), all groups are significant. This essentially means that the alpha diversity values of one of these groups compared to the mean or any other group were significantly different. Technically the other metrics had a normal distribution and would be better suited for an ANOVA test. This can be added later.
 
+
+Also looked at significance of metrics for Density using Kruskal Wallace test (non-parametric ANOVA).
 
 ```{r}
 p <- plot_richness_estimates(physeq = physeq.filtered, 
                              erDF = erDF,
                              "Density", 
-                             color = "Extraction_type", 
+                             color = "Simple_extraction", 
                              title="Alpha diversity of Density (Kruskal Wallace test)")
 
 p + geom_boxplot(aes(x=Density,

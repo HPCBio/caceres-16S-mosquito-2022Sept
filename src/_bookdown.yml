@@ -1,7 +1,8 @@
 rmd_files: 
-  html: ["index.Rmd", "InitialSetup.Rmd", "RawComposition.Rmd", "Filtering.Rmd",
-  "AlphaRarefaction.Rmd", "AlphaDiversity.Rmd", "PrevalenceFiltering.Rmd", "PrevFilteredAgglomComposition.Rmd"]
+#  html: ["index.Rmd", "InitialSetup.Rmd", "RawComposition.Rmd", "Filtering.Rmd",
+#  "AlphaRarefaction.Rmd", "AlphaDiversity.Rmd", "PrevalenceFiltering.Rmd", "PrevFilteredAgglomComposition.Rmd"]
 #rmd_files: 
-#  html: ["index.Rmd", "InitialSetup.Rmd", "RawComposition.Rmd", "Filtering.Rmd", 
-#  "AlphaRarefaction.Rmd", "AlphaDiversity.Rmd", "PrevalenceFiltering.Rmd", "PrevFilteredAgglomComposition.Rmd",
-#  "BetaDiversity.Rmd", "DiffAbundance.Rmd", "SessionInfo.Rmd"]
+  html: ["index.Rmd", "InitialSetup.Rmd", "RawComposition.Rmd", "Filtering.Rmd", 
+  "AlphaRarefaction.Rmd", "AlphaDiversity.Rmd", "PrevalenceFiltering.Rmd", "PrevFilteredAgglomComposition.Rmd",
+  "BetaDiversity.Rmd", "DiffAbundance.Rmd", "SessionInfo.Rmd"]
+delete_merged_file: TRUE

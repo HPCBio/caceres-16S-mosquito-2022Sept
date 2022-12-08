@@ -1,142 +1,142 @@
 SampleID	Label	Extraction_type	Simple_extraction	Environment	Competition	Density	Plate	Extr_Env_Comp_Den	Env_Comp_Den	Extr_Env
-16s-I-G-M-20-108_S204_L001	I.G.M.20_108	Water	I	G	Intraspecific	20	2	I.G.M.20	G-Intraspecific-20	W_G
-16s-I-G-M-20-117_S213_L001	I.G.M.20_117	Water	I	G	Intraspecific	20	2	I.G.M.20	G-Intraspecific-20	W_G
-16s-I-G-M-20-127_S223_L001	I.G.M.20_127	Water	I	G	Intraspecific	20	2	I.G.M.20	G-Intraspecific-20	W_G
-16s-I-G-M-20-136_S232_L001	I.G.M.20_136	Water	I	G	Intraspecific	20	2	I.G.M.20	G-Intraspecific-20	W_G
-16s-I-G-M-20-146_S242_L001	I.G.M.20_146	Water	I	G	Intraspecific	20	2	I.G.M.20	G-Intraspecific-20	W_G
-16s-I-G-M-40-109_S205_L001	I.G.M.40_109	Water	I	G	Intraspecific	40	2	I.G.M.40	G-Intraspecific-40	W_G
-16s-I-G-M-40-118_S214_L001	I.G.M.40_118	Water	I	G	Intraspecific	40	2	I.G.M.40	G-Intraspecific-40	W_G
-16s-I-G-M-40-128_S224_L001	I.G.M.40_128	Water	I	G	Intraspecific	40	2	I.G.M.40	G-Intraspecific-40	W_G
-16s-I-G-M-40-137_S233_L001	I.G.M.40_137	Water	I	G	Intraspecific	40	2	I.G.M.40	G-Intraspecific-40	W_G
-16s-I-G-M-40-147_S243_L001	I.G.M.40_147	Water	I	G	Intraspecific	40	2	I.G.M.40	G-Intraspecific-40	W_G
-16s-I-G-MS-20-110_S206_L001	I.G.MS.20_110	Water	I	G	Interspecific	20	2	I.G.MS.20	G-Interspecific-20	W_G
-16s-I-G-MS-20-119_S215_L001	I.G.MS.20_119	Water	I	G	Interspecific	20	2	I.G.MS.20	G-Interspecific-20	W_G
-16s-I-G-MS-20-129_S225_L001	I.G.MS.20_129	Water	I	G	Interspecific	20	2	I.G.MS.20	G-Interspecific-20	W_G
-16s-I-G-MS-20-138_S234_L001	I.G.MS.20_138	Water	I	G	Interspecific	20	2	I.G.MS.20	G-Interspecific-20	W_G
-16s-I-G-MS-20-148_S244_L001	I.G.MS.20_148	Water	I	G	Interspecific	20	2	I.G.MS.20	G-Interspecific-20	W_G
-16s-I-G-MS-40-111_S207_L001	I.G.MS.40_111	Water	I	G	Interspecific	40	2	I.G.MS.40	G-Interspecific-40	W_G
-16s-I-G-MS-40-120_S216_L001	I.G.MS.40_120	Water	I	G	Interspecific	40	2	I.G.MS.40	G-Interspecific-40	W_G
-16s-I-G-MS-40-139_S235_L001	I.G.MS.40_139	Water	I	G	Interspecific	40	2	I.G.MS.40	G-Interspecific-40	W_G
-16s-I-G-MS-40-149_S245_L001	I.G.MS.40_149	Water	I	G	Interspecific	40	2	I.G.MS.40	G-Interspecific-40	W_G
-16s-I-G-STOCK-155_S251_L001	I.G.STOCK_155	Water	I	G	Infusion	Infusion	2	I.G.STOCK	Infusion	W_G
-16s-I-G-STOCK-156_S252_L001	I.G.STOCK_156	Water	I	G	Infusion	Infusion	2	I.G.STOCK	Infusion	W_G
-16s-I-G-STOCK-157_S253_L001	I.G.STOCK_157	Water	I	G	Infusion	Infusion	2	I.G.STOCK	Infusion	W_G
-16s-I-GN-M-20-113_S209_L001	I.GN.M.20_113	Water	I	GN	Intraspecific	20	2	I.GN.M.20	GN-Intraspecific-20	W_GN
-16s-I-GN-M-20-123_S219_L001	I.GN.M.20_123	Water	I	GN	Intraspecific	20	2	I.GN.M.20	GN-Intraspecific-20	W_GN
-16s-I-GN-M-20-132_S228_L001	I.GN.M.20_132	Water	I	GN	Intraspecific	20	2	I.GN.M.20	GN-Intraspecific-20	W_GN
-16s-I-GN-M-20-142_S238_L001	I.GN.M.20_142	Water	I	GN	Intraspecific	20	2	I.GN.M.20	GN-Intraspecific-20	W_GN
-16s-I-GN-M-20-152_S248_L001	I.GN.M.20_152	Water	I	GN	Intraspecific	20	2	I.GN.M.20	GN-Intraspecific-20	W_GN
-16s-I-GN-M-40-114_S210_L001	I.GN.M.40_114	Water	I	GN	Intraspecific	40	2	I.GN.M.40	GN-Intraspecific-40	W_GN
-16s-I-GN-M-40-124_S220_L001	I.GN.M.40_124	Water	I	GN	Intraspecific	40	2	I.GN.M.40	GN-Intraspecific-40	W_GN
-16s-I-GN-M-40-133_S229_L001	I.GN.M.40_133	Water	I	GN	Intraspecific	40	2	I.GN.M.40	GN-Intraspecific-40	W_GN
-16s-I-GN-M-40-143_S239_L001	I.GN.M.40_143	Water	I	GN	Intraspecific	40	2	I.GN.M.40	GN-Intraspecific-40	W_GN
-16s-I-GN-MS-20-115_S211_L001	I.GN.MS.20_115	Water	I	GN	Interspecific	20	2	I.GN.MS.20	GN-Interspecific-20	W_GN
-16s-I-GN-MS-20-125_S221_L001	I.GN.MS.20_125	Water	I	GN	Interspecific	20	2	I.GN.MS.20	GN-Interspecific-20	W_GN
-16s-I-GN-MS-20-134_S230_L001	I.GN.MS.20_134	Water	I	GN	Interspecific	20	2	I.GN.MS.20	GN-Interspecific-20	W_GN
-16s-I-GN-MS-20-144_S240_L001	I.GN.MS.20_144	Water	I	GN	Interspecific	20	2	I.GN.MS.20	GN-Interspecific-20	W_GN
-16s-I-GN-MS-20-153_S249_L001	I.GN.MS.20_153	Water	I	GN	Interspecific	20	2	I.GN.MS.20	GN-Interspecific-20	W_GN
-16s-I-GN-MS-40-116_S212_L001	I.GN.MS.40_116	Water	I	GN	Interspecific	40	2	I.GN.MS.40	GN-Interspecific-40	W_GN
-16s-I-GN-MS-40-126_S222_L001	I.GN.MS.40_126	Water	I	GN	Interspecific	40	2	I.GN.MS.40	GN-Interspecific-40	W_GN
-16s-I-GN-MS-40-135_S231_L001	I.GN.MS.40_135	Water	I	GN	Interspecific	40	2	I.GN.MS.40	GN-Interspecific-40	W_GN
-16s-I-GN-MS-40-145_S241_L001	I.GN.MS.40_145	Water	I	GN	Interspecific	40	2	I.GN.MS.40	GN-Interspecific-40	W_GN
-16s-I-GN-MS-40-154_S250_L001	I.GN.MS.40_154	Water	I	GN	Interspecific	40	2	I.GN.MS.40	GN-Interspecific-40	W_GN
-16s-I-GN-STOCK-158_S254_L001	I.GN.STOCK_158	Water	I	GN	Infusion	Infusion	2	I.GN.STOCK	Infusion	W_GN
-16s-I-GN-STOCK-159_S255_L001	I.GN.STOCK_159	Water	I	GN	Infusion	Infusion	2	I.GN.STOCK	Infusion	W_GN
-16s-I-GN-STOCK-160_S256_L001	I.GN.STOCK_160	Water	I	GN	Infusion	Infusion	2	I.GN.STOCK	Infusion	W_GN
-16s-L-G-M-20-1_S97_L001	L.G.M.20_1	4th instar mosquito larva(e)	L	G	Intraspecific	20	1	L.G.M.20	G-Intraspecific-20	ML_G
-16s-L-G-M-20-18_S114_L001	L.G.M.20_18	4th instar mosquito larva(e)	L	G	Intraspecific	20	1	L.G.M.20	G-Intraspecific-20	ML_G
-16s-L-G-M-20-19_S115_L001	L.G.M.20_19	4th instar mosquito larva(e)	L	G	Intraspecific	20	1	L.G.M.20	G-Intraspecific-20	ML_G
-16s-L-G-M-20-41_S137_L001	L.G.M.20_41	Mosquito Larvae	L	G	Intraspecific	20	1	L.G.M.20	G-Intraspecific-20	ML_G
-16s-L-G-M-20-42_S138_L001	L.G.M.20_42	Mosquito Larvae	L	G	Intraspecific	20	1	L.G.M.20	G-Intraspecific-20	ML_G
-16s-L-G-M-20-43_S139_L001	L.G.M.20_43	Mosquito Larvae	L	G	Intraspecific	20	1	L.G.M.20	G-Intraspecific-20	ML_G
-16s-L-G-M-20-64_S160_L001	L.G.M.20_64	Mosquito Larvae	L	G	Intraspecific	20	1	L.G.M.20	G-Intraspecific-20	ML_G
-16s-L-G-M-20-65_S161_L001	L.G.M.20_65	Mosquito Larvae	L	G	Intraspecific	20	1	L.G.M.20	G-Intraspecific-20	ML_G
-16s-L-G-M-20-66_S162_L001	L.G.M.20_66	Mosquito Larvae	L	G	Intraspecific	20	1	L.G.M.20	G-Intraspecific-20	ML_G
-16s-L-G-M-20-90_S186_L001	L.G.M.20_90	Mosquito Larvae	L	G	Intraspecific	20	1	L.G.M.20	G-Intraspecific-20	ML_G
-16s-L-G-M-40-2_S98_L001	L.G.M.40_2	4th instar mosquito larva(e)	L	G	Intraspecific	40	1	L.G.M.40	G-Intraspecific-40	ML_G
-16s-L-G-M-40-20_S116_L001	L.G.M.40_20	Mosquito Larvae	L	G	Intraspecific	40	1	L.G.M.40	G-Intraspecific-40	ML_G
-16s-L-G-M-40-21_S117_L001	L.G.M.40_21	Mosquito Larvae	L	G	Intraspecific	40	1	L.G.M.40	G-Intraspecific-40	ML_G
-16s-L-G-M-40-22_S118_L001	L.G.M.40_22	Mosquito Larvae	L	G	Intraspecific	40	1	L.G.M.40	G-Intraspecific-40	ML_G
-16s-L-G-M-40-3_S99_L001	L.G.M.40_3	4th instar mosquito larva(e)	L	G	Intraspecific	40	1	L.G.M.40	G-Intraspecific-40	ML_G
-16s-L-G-M-40-4_S100_L001	L.G.M.40_4	4th instar mosquito larva(e)	L	G	Intraspecific	40	1	L.G.M.40	G-Intraspecific-40	ML_G
-16s-L-G-M-40-44_S140_L001	L.G.M.40_44	Mosquito Larvae	L	G	Intraspecific	40	1	L.G.M.40	G-Intraspecific-40	ML_G
-16s-L-G-M-40-45_S141_L001	L.G.M.40_45	Mosquito Larvae	L	G	Intraspecific	40	1	L.G.M.40	G-Intraspecific-40	ML_G
-16s-L-G-M-40-46_S142_L001	L.G.M.40_46	Mosquito Larvae	L	G	Intraspecific	40	1	L.G.M.40	G-Intraspecific-40	ML_G
-16s-L-G-M-40-67_S163_L001	L.G.M.40_67	Mosquito Larvae	L	G	Intraspecific	40	1	L.G.M.40	G-Intraspecific-40	ML_G
-16s-L-G-M-40-68_S164_L001	L.G.M.40_68	Mosquito Larvae	L	G	Intraspecific	40	1	L.G.M.40	G-Intraspecific-40	ML_G
-16s-L-G-M-40-69_S165_L001	L.G.M.40_69	Mosquito Larvae	L	G	Intraspecific	40	1	L.G.M.40	G-Intraspecific-40	ML_G
-16s-L-G-M-40-91_S187_L001	L.G.M.40_91	Mosquito Larvae	L	G	Intraspecific	40	1	L.G.M.40	G-Intraspecific-40	ML_G
-16s-L-G-M-40-92_S188_L001	L.G.M.40_92	Mosquito Larvae	L	G	Intraspecific	40	1	L.G.M.40	G-Intraspecific-40	ML_G
-16s-L-G-MS-20-23_S119_L001	L.G.MS.20_23	Mosquito Larvae	L	G	Interspecific	20	1	L.G.MS.20	G-Interspecific-20	ML_G
-16s-L-G-MS-20-24_S120_L001	L.G.MS.20_24	Mosquito Larvae	L	G	Interspecific	20	1	L.G.MS.20	G-Interspecific-20	ML_G
-16s-L-G-MS-20-47_S143_L001	L.G.MS.20_47	Mosquito Larvae	L	G	Interspecific	20	1	L.G.MS.20	G-Interspecific-20	ML_G
-16s-L-G-MS-20-48_S144_L001	L.G.MS.20_48	Mosquito Larvae	L	G	Interspecific	20	1	L.G.MS.20	G-Interspecific-20	ML_G
-16s-L-G-MS-20-5_S101_L001	L.G.MS.20_5	4th instar mosquito larva(e)	L	G	Interspecific	20	1	L.G.MS.20	G-Interspecific-20	ML_G
-16s-L-G-MS-20-70_S166_L001	L.G.MS.20_70	Mosquito Larvae	L	G	Interspecific	20	1	L.G.MS.20	G-Interspecific-20	ML_G
-16s-L-G-MS-20-71_S167_L001	L.G.MS.20_71	Mosquito Larvae	L	G	Interspecific	20	1	L.G.MS.20	G-Interspecific-20	ML_G
-16s-L-G-MS-20-72_S168_L001	L.G.MS.20_72	Mosquito Larvae	L	G	Interspecific	20	1	L.G.MS.20	G-Interspecific-20	ML_G
-16s-L-G-MS-20-93_S189_L001	L.G.MS.20_93	Mosquito Larvae	L	G	Interspecific	20	1	L.G.MS.20	G-Interspecific-20	ML_G
-16s-L-G-MS-20-94_S190_L001	L.G.MS.20_94	Mosquito Larvae	L	G	Interspecific	20	1	L.G.MS.20	G-Interspecific-20	ML_G
-16s-L-G-MS-40-25_S121_L001	L.G.MS.40_25	Mosquito Larvae	L	G	Interspecific	40	1	L.G.MS.40	G-Interspecific-40	ML_G
-16s-L-G-MS-40-26_S122_L001	L.G.MS.40_26	Mosquito Larvae	L	G	Interspecific	40	1	L.G.MS.40	G-Interspecific-40	ML_G
-16s-L-G-MS-40-27_S123_L001	L.G.MS.40_27	Mosquito Larvae	L	G	Interspecific	40	1	L.G.MS.40	G-Interspecific-40	ML_G
-16s-L-G-MS-40-6_S102_L001	L.G.MS.40_6	4th instar mosquito larva(e)	L	G	Interspecific	40	1	L.G.MS.40	G-Interspecific-40	ML_G
-16s-L-G-MS-40-73_S169_L001	L.G.MS.40_73	Mosquito Larvae	L	G	Interspecific	40	1	L.G.MS.40	G-Interspecific-40	ML_G
-16s-L-G-MS-40-74_S170_L001	L.G.MS.40_74	Mosquito Larvae	L	G	Interspecific	40	1	L.G.MS.40	G-Interspecific-40	ML_G
-16s-L-G-MS-40-75_S171_L001	L.G.MS.40_75	Mosquito Larvae	L	G	Interspecific	40	1	L.G.MS.40	G-Interspecific-40	ML_G
-16s-L-G-MS-40-95_S191_L001	L.G.MS.40_95	Mosquito Larvae	L	G	Interspecific	40	1	L.G.MS.40	G-Interspecific-40	ML_G
-16s-L-G-MS-40-96_S192_L001	L.G.MS.40_96	Mosquito Larvae	L	G	Interspecific	40	1	L.G.MS.40	G-Interspecific-40	ML_G
-16s-L-G-MS-40-97_S193_L001	L.G.MS.40_97	Mosquito Larvae	L	G	Interspecific	40	2	L.G.MS.40	G-Interspecific-40	ML_G
-16s-L-GN-M-20-10_S106_L001	L.GN.M.20_10	4th instar mosquito larva(e)	L	GN	Intraspecific	20	1	L.GN.M.20	GN-Intraspecific-20	ML_GN
-16s-L-GN-M-20-100_S196_L001	L.GN.M.20_100	Mosquito Larvae	L	GN	Intraspecific	20	2	L.GN.M.20	GN-Intraspecific-20	ML_GN
-16s-L-GN-M-20-101_S197_L001	L.GN.M.20_101	Mosquito Larvae	L	GN	Intraspecific	20	2	L.GN.M.20	GN-Intraspecific-20	ML_GN
-16s-L-GN-M-20-102_S198_L001	L.GN.M.20_102	Mosquito Larvae	L	GN	Intraspecific	20	2	L.GN.M.20	GN-Intraspecific-20	ML_GN
-16s-L-GN-M-20-30_S126_L001	L.GN.M.20_30	Mosquito Larvae	L	GN	Intraspecific	20	1	L.GN.M.20	GN-Intraspecific-20	ML_GN
-16s-L-GN-M-20-31_S127_L001	L.GN.M.20_31	Mosquito Larvae	L	GN	Intraspecific	20	1	L.GN.M.20	GN-Intraspecific-20	ML_GN
-16s-L-GN-M-20-32_S128_L001	L.GN.M.20_32	Mosquito Larvae	L	GN	Intraspecific	20	1	L.GN.M.20	GN-Intraspecific-20	ML_GN
-16s-L-GN-M-20-52_S148_L001	L.GN.M.20_52	Mosquito Larvae	L	GN	Intraspecific	20	1	L.GN.M.20	GN-Intraspecific-20	ML_GN
-16s-L-GN-M-20-53_S149_L001	L.GN.M.20_53	Mosquito Larvae	L	GN	Intraspecific	20	1	L.GN.M.20	GN-Intraspecific-20	ML_GN
-16s-L-GN-M-20-54_S150_L001	L.GN.M.20_54	Mosquito Larvae	L	GN	Intraspecific	20	1	L.GN.M.20	GN-Intraspecific-20	ML_GN
-16s-L-GN-M-20-78_S174_L001	L.GN.M.20_78	Mosquito Larvae	L	GN	Intraspecific	20	1	L.GN.M.20	GN-Intraspecific-20	ML_GN
-16s-L-GN-M-20-79_S175_L001	L.GN.M.20_79	Mosquito Larvae	L	GN	Intraspecific	20	1	L.GN.M.20	GN-Intraspecific-20	ML_GN
-16s-L-GN-M-20-8_S104_L001	L.GN.M.20_8	4th instar mosquito larva(e)	L	GN	Intraspecific	20	1	L.GN.M.20	GN-Intraspecific-20	ML_GN
-16s-L-GN-M-20-80_S176_L001	L.GN.M.20_80	Mosquito Larvae	L	GN	Intraspecific	20	1	L.GN.M.20	GN-Intraspecific-20	ML_GN
-16s-L-GN-M-20-9_S105_L001	L.GN.M.20_9	4th instar mosquito larva(e)	L	GN	Intraspecific	20	1	L.GN.M.20	GN-Intraspecific-20	ML_GN
-16s-L-GN-M-40-11_S107_L001	L.GN.M.40_11	4th instar mosquito larva(e)	L	GN	Intraspecific	40	1	L.GN.M.40	GN-Intraspecific-40	ML_GN
-16s-L-GN-M-40-12_S108_L001	L.GN.M.40_12	4th instar mosquito larva(e)	L	GN	Intraspecific	40	1	L.GN.M.40	GN-Intraspecific-40	ML_GN
-16s-L-GN-M-40-13_S109_L001	L.GN.M.40_13	4th instar mosquito larva(e)	L	GN	Intraspecific	40	1	L.GN.M.40	GN-Intraspecific-40	ML_GN
-16s-L-GN-M-40-33_S129_L001	L.GN.M.40_33	Mosquito Larvae	L	GN	Intraspecific	40	1	L.GN.M.40	GN-Intraspecific-40	ML_GN
-16s-L-GN-M-40-34_S130_L001	L.GN.M.40_34	Mosquito Larvae	L	GN	Intraspecific	40	1	L.GN.M.40	GN-Intraspecific-40	ML_GN
-16s-L-GN-M-40-35_S131_L001	L.GN.M.40_35	Mosquito Larvae	L	GN	Intraspecific	40	1	L.GN.M.40	GN-Intraspecific-40	ML_GN
-16s-L-GN-M-40-55_S151_L001	L.GN.M.40_55	Mosquito Larvae	L	GN	Intraspecific	40	1	L.GN.M.40	GN-Intraspecific-40	ML_GN
-16s-L-GN-M-40-56_S152_L001	L.GN.M.40_56	Mosquito Larvae	L	GN	Intraspecific	40	1	L.GN.M.40	GN-Intraspecific-40	ML_GN
-16s-L-GN-M-40-57_S153_L001	L.GN.M.40_57	Mosquito Larvae	L	GN	Intraspecific	40	1	L.GN.M.40	GN-Intraspecific-40	ML_GN
-16s-L-GN-M-40-81_S177_L001	L.GN.M.40_81	Mosquito Larvae	L	GN	Intraspecific	40	1	L.GN.M.40	GN-Intraspecific-40	ML_GN
-16s-L-GN-M-40-82_S178_L001	L.GN.M.40_82	Mosquito Larvae	L	GN	Intraspecific	40	1	L.GN.M.40	GN-Intraspecific-40	ML_GN
-16s-L-GN-M-40-83_S179_L001	L.GN.M.40_83	Mosquito Larvae	L	GN	Intraspecific	40	1	L.GN.M.40	GN-Intraspecific-40	ML_GN
-16s-L-GN-MS-20-103_S199_L001	L.GN.MS.20_103	Mosquito Larvae	L	GN	Interspecific	20	2	L.GN.MS.20	GN-Interspecific-20	ML_GN
-16s-L-GN-MS-20-104_S200_L001	L.GN.MS.20_104	Mosquito Larvae	L	GN	Interspecific	20	2	L.GN.MS.20	GN-Interspecific-20	ML_GN
-16s-L-GN-MS-20-14_S110_L001	L.GN.MS.20_14	4th instar mosquito larva(e)	L	GN	Interspecific	20	1	L.GN.MS.20	GN-Interspecific-20	ML_GN
-16s-L-GN-MS-20-36_S132_L001	L.GN.MS.20_36	Mosquito Larvae	L	GN	Interspecific	20	1	L.GN.MS.20	GN-Interspecific-20	ML_GN
-16s-L-GN-MS-20-37_S133_L001	L.GN.MS.20_37	Mosquito Larvae	L	GN	Interspecific	20	1	L.GN.MS.20	GN-Interspecific-20	ML_GN
-16s-L-GN-MS-20-58_S154_L001	L.GN.MS.20_58	Mosquito Larvae	L	GN	Interspecific	20	1	L.GN.MS.20	GN-Interspecific-20	ML_GN
-16s-L-GN-MS-20-59_S155_L001	L.GN.MS.20_59	Mosquito Larvae	L	GN	Interspecific	20	1	L.GN.MS.20	GN-Interspecific-20	ML_GN
-16s-L-GN-MS-20-60_S156_L001	L.GN.MS.20_60	Mosquito Larvae	L	GN	Interspecific	20	1	L.GN.MS.20	GN-Interspecific-20	ML_GN
-16s-L-GN-MS-20-84_S180_L001	L.GN.MS.20_84	Mosquito Larvae	L	GN	Interspecific	20	1	L.GN.MS.20	GN-Interspecific-20	ML_GN
-16s-L-GN-MS-20-85_S181_L001	L.GN.MS.20_85	Mosquito Larvae	L	GN	Interspecific	20	1	L.GN.MS.20	GN-Interspecific-20	ML_GN
-16s-L-GN-MS-20-86_S182_L001	L.GN.MS.20_86	Mosquito Larvae	L	GN	Interspecific	20	1	L.GN.MS.20	GN-Interspecific-20	ML_GN
-16s-L-GN-MS-40-105_S201_L001	L.GN.MS.40_105	Mosquito Larvae	L	GN	Interspecific	40	2	L.GN.MS.40	GN-Interspecific-40	ML_GN
-16s-L-GN-MS-40-106_S202_L001	L.GN.MS.40_106	Mosquito Larvae	L	GN	Interspecific	40	2	L.GN.MS.40	GN-Interspecific-40	ML_GN
-16s-L-GN-MS-40-107_S203_L001	L.GN.MS.40_107	Mosquito Larvae	L	GN	Interspecific	40	2	L.GN.MS.40	GN-Interspecific-40	ML_GN
-16s-L-GN-MS-40-15_S111_L001	L.GN.MS.40_15	4th instar mosquito larva(e)	L	GN	Interspecific	40	1	L.GN.MS.40	GN-Interspecific-40	ML_GN
-16s-L-GN-MS-40-16_S112_L001	L.GN.MS.40_16	4th instar mosquito larva(e)	L	GN	Interspecific	40	1	L.GN.MS.40	GN-Interspecific-40	ML_GN
-16s-L-GN-MS-40-17_S113_L001	L.GN.MS.40_17	4th instar mosquito larva(e)	L	GN	Interspecific	40	1	L.GN.MS.40	GN-Interspecific-40	ML_GN
-16s-L-GN-MS-40-38_S134_L001	L.GN.MS.40_38	Mosquito Larvae	L	GN	Interspecific	40	1	L.GN.MS.40	GN-Interspecific-40	ML_GN
-16s-L-GN-MS-40-39_S135_L001	L.GN.MS.40_39	Mosquito Larvae	L	GN	Interspecific	40	1	L.GN.MS.40	GN-Interspecific-40	ML_GN
-16s-L-GN-MS-40-40_S136_L001	L.GN.MS.40_40	Mosquito Larvae	L	GN	Interspecific	40	1	L.GN.MS.40	GN-Interspecific-40	ML_GN
-16s-L-GN-MS-40-61_S157_L001	L.GN.MS.40_61	Mosquito Larvae	L	GN	Interspecific	40	1	L.GN.MS.40	GN-Interspecific-40	ML_GN
-16s-L-GN-MS-40-62_S158_L001	L.GN.MS.40_62	Mosquito Larvae	L	GN	Interspecific	40	1	L.GN.MS.40	GN-Interspecific-40	ML_GN
-16s-L-GN-MS-40-63_S159_L001	L.GN.MS.40_63	Mosquito Larvae	L	GN	Interspecific	40	1	L.GN.MS.40	GN-Interspecific-40	ML_GN
-16s-L-GN-MS-40-87_S183_L001	L.GN.MS.40_87	Mosquito Larvae	L	GN	Interspecific	40	1	L.GN.MS.40	GN-Interspecific-40	ML_GN
-16s-L-GN-MS-40-88_S184_L001	L.GN.MS.40_88	Mosquito Larvae	L	GN	Interspecific	40	1	L.GN.MS.40	GN-Interspecific-40	ML_GN
-16s-L-GN-MS-40-89_S185_L001	L.GN.MS.40_89	Mosquito Larvae	L	GN	Interspecific	40	1	L.GN.MS.40	GN-Interspecific-40	ML_GN
+16s-I-G-M-20-108_S204_L001	I.G.M.20_108	Water	Water	G	Intraspecific	20	2	I.G.M.20	G-Intraspecific-20	W_G
+16s-I-G-M-20-117_S213_L001	I.G.M.20_117	Water	Water	G	Intraspecific	20	2	I.G.M.20	G-Intraspecific-20	W_G
+16s-I-G-M-20-127_S223_L001	I.G.M.20_127	Water	Water	G	Intraspecific	20	2	I.G.M.20	G-Intraspecific-20	W_G
+16s-I-G-M-20-136_S232_L001	I.G.M.20_136	Water	Water	G	Intraspecific	20	2	I.G.M.20	G-Intraspecific-20	W_G
+16s-I-G-M-20-146_S242_L001	I.G.M.20_146	Water	Water	G	Intraspecific	20	2	I.G.M.20	G-Intraspecific-20	W_G
+16s-I-G-M-40-109_S205_L001	I.G.M.40_109	Water	Water	G	Intraspecific	40	2	I.G.M.40	G-Intraspecific-40	W_G
+16s-I-G-M-40-118_S214_L001	I.G.M.40_118	Water	Water	G	Intraspecific	40	2	I.G.M.40	G-Intraspecific-40	W_G
+16s-I-G-M-40-128_S224_L001	I.G.M.40_128	Water	Water	G	Intraspecific	40	2	I.G.M.40	G-Intraspecific-40	W_G
+16s-I-G-M-40-137_S233_L001	I.G.M.40_137	Water	Water	G	Intraspecific	40	2	I.G.M.40	G-Intraspecific-40	W_G
+16s-I-G-M-40-147_S243_L001	I.G.M.40_147	Water	Water	G	Intraspecific	40	2	I.G.M.40	G-Intraspecific-40	W_G
+16s-I-G-MS-20-110_S206_L001	I.G.MS.20_110	Water	Water	G	Interspecific	20	2	I.G.MS.20	G-Interspecific-20	W_G
+16s-I-G-MS-20-119_S215_L001	I.G.MS.20_119	Water	Water	G	Interspecific	20	2	I.G.MS.20	G-Interspecific-20	W_G
+16s-I-G-MS-20-129_S225_L001	I.G.MS.20_129	Water	Water	G	Interspecific	20	2	I.G.MS.20	G-Interspecific-20	W_G
+16s-I-G-MS-20-138_S234_L001	I.G.MS.20_138	Water	Water	G	Interspecific	20	2	I.G.MS.20	G-Interspecific-20	W_G
+16s-I-G-MS-20-148_S244_L001	I.G.MS.20_148	Water	Water	G	Interspecific	20	2	I.G.MS.20	G-Interspecific-20	W_G
+16s-I-G-MS-40-111_S207_L001	I.G.MS.40_111	Water	Water	G	Interspecific	40	2	I.G.MS.40	G-Interspecific-40	W_G
+16s-I-G-MS-40-120_S216_L001	I.G.MS.40_120	Water	Water	G	Interspecific	40	2	I.G.MS.40	G-Interspecific-40	W_G
+16s-I-G-MS-40-139_S235_L001	I.G.MS.40_139	Water	Water	G	Interspecific	40	2	I.G.MS.40	G-Interspecific-40	W_G
+16s-I-G-MS-40-149_S245_L001	I.G.MS.40_149	Water	Water	G	Interspecific	40	2	I.G.MS.40	G-Interspecific-40	W_G
+16s-I-G-STOCK-155_S251_L001	I.G.STOCK_155	Water	Stock Water	G	Stock Water	Stock Water	2	I.G.STOCK	Stock Water	W_G
+16s-I-G-STOCK-156_S252_L001	I.G.STOCK_156	Water	Stock Water	G	Stock Water	Stock Water	2	I.G.STOCK	Stock Water	W_G
+16s-I-G-STOCK-157_S253_L001	I.G.STOCK_157	Water	Stock Water	G	Stock Water	Stock Water	2	I.G.STOCK	Stock Water	W_G
+16s-I-GN-M-20-113_S209_L001	I.GN.M.20_113	Water	Water	GN	Intraspecific	20	2	I.GN.M.20	GN-Intraspecific-20	W_GN
+16s-I-GN-M-20-123_S219_L001	I.GN.M.20_123	Water	Water	GN	Intraspecific	20	2	I.GN.M.20	GN-Intraspecific-20	W_GN
+16s-I-GN-M-20-132_S228_L001	I.GN.M.20_132	Water	Water	GN	Intraspecific	20	2	I.GN.M.20	GN-Intraspecific-20	W_GN
+16s-I-GN-M-20-142_S238_L001	I.GN.M.20_142	Water	Water	GN	Intraspecific	20	2	I.GN.M.20	GN-Intraspecific-20	W_GN
+16s-I-GN-M-20-152_S248_L001	I.GN.M.20_152	Water	Water	GN	Intraspecific	20	2	I.GN.M.20	GN-Intraspecific-20	W_GN
+16s-I-GN-M-40-114_S210_L001	I.GN.M.40_114	Water	Water	GN	Intraspecific	40	2	I.GN.M.40	GN-Intraspecific-40	W_GN
+16s-I-GN-M-40-124_S220_L001	I.GN.M.40_124	Water	Water	GN	Intraspecific	40	2	I.GN.M.40	GN-Intraspecific-40	W_GN
+16s-I-GN-M-40-133_S229_L001	I.GN.M.40_133	Water	Water	GN	Intraspecific	40	2	I.GN.M.40	GN-Intraspecific-40	W_GN
+16s-I-GN-M-40-143_S239_L001	I.GN.M.40_143	Water	Water	GN	Intraspecific	40	2	I.GN.M.40	GN-Intraspecific-40	W_GN
+16s-I-GN-MS-20-115_S211_L001	I.GN.MS.20_115	Water	Water	GN	Interspecific	20	2	I.GN.MS.20	GN-Interspecific-20	W_GN
+16s-I-GN-MS-20-125_S221_L001	I.GN.MS.20_125	Water	Water	GN	Interspecific	20	2	I.GN.MS.20	GN-Interspecific-20	W_GN
+16s-I-GN-MS-20-134_S230_L001	I.GN.MS.20_134	Water	Water	GN	Interspecific	20	2	I.GN.MS.20	GN-Interspecific-20	W_GN
+16s-I-GN-MS-20-144_S240_L001	I.GN.MS.20_144	Water	Water	GN	Interspecific	20	2	I.GN.MS.20	GN-Interspecific-20	W_GN
+16s-I-GN-MS-20-153_S249_L001	I.GN.MS.20_153	Water	Water	GN	Interspecific	20	2	I.GN.MS.20	GN-Interspecific-20	W_GN
+16s-I-GN-MS-40-116_S212_L001	I.GN.MS.40_116	Water	Water	GN	Interspecific	40	2	I.GN.MS.40	GN-Interspecific-40	W_GN
+16s-I-GN-MS-40-126_S222_L001	I.GN.MS.40_126	Water	Water	GN	Interspecific	40	2	I.GN.MS.40	GN-Interspecific-40	W_GN
+16s-I-GN-MS-40-135_S231_L001	I.GN.MS.40_135	Water	Water	GN	Interspecific	40	2	I.GN.MS.40	GN-Interspecific-40	W_GN
+16s-I-GN-MS-40-145_S241_L001	I.GN.MS.40_145	Water	Water	GN	Interspecific	40	2	I.GN.MS.40	GN-Interspecific-40	W_GN
+16s-I-GN-MS-40-154_S250_L001	I.GN.MS.40_154	Water	Water	GN	Interspecific	40	2	I.GN.MS.40	GN-Interspecific-40	W_GN
+16s-I-GN-STOCK-158_S254_L001	I.GN.STOCK_158	Water	Stock Water	GN	Stock Water	Stock Water	2	I.GN.STOCK	Stock Water	W_GN
+16s-I-GN-STOCK-159_S255_L001	I.GN.STOCK_159	Water	Stock Water	GN	Stock Water	Stock Water	2	I.GN.STOCK	Stock Water	W_GN
+16s-I-GN-STOCK-160_S256_L001	I.GN.STOCK_160	Water	Stock Water	GN	Stock Water	Stock Water	2	I.GN.STOCK	Stock Water	W_GN
+16s-L-G-M-20-1_S97_L001	L.G.M.20_1	4th instar mosquito larva(e)	Mosquito Larvae	G	Intraspecific	20	1	L.G.M.20	G-Intraspecific-20	ML_G
+16s-L-G-M-20-18_S114_L001	L.G.M.20_18	4th instar mosquito larva(e)	Mosquito Larvae	G	Intraspecific	20	1	L.G.M.20	G-Intraspecific-20	ML_G
+16s-L-G-M-20-19_S115_L001	L.G.M.20_19	4th instar mosquito larva(e)	Mosquito Larvae	G	Intraspecific	20	1	L.G.M.20	G-Intraspecific-20	ML_G
+16s-L-G-M-20-41_S137_L001	L.G.M.20_41	Mosquito Larvae	Mosquito Larvae	G	Intraspecific	20	1	L.G.M.20	G-Intraspecific-20	ML_G
+16s-L-G-M-20-42_S138_L001	L.G.M.20_42	Mosquito Larvae	Mosquito Larvae	G	Intraspecific	20	1	L.G.M.20	G-Intraspecific-20	ML_G
+16s-L-G-M-20-43_S139_L001	L.G.M.20_43	Mosquito Larvae	Mosquito Larvae	G	Intraspecific	20	1	L.G.M.20	G-Intraspecific-20	ML_G
+16s-L-G-M-20-64_S160_L001	L.G.M.20_64	Mosquito Larvae	Mosquito Larvae	G	Intraspecific	20	1	L.G.M.20	G-Intraspecific-20	ML_G
+16s-L-G-M-20-65_S161_L001	L.G.M.20_65	Mosquito Larvae	Mosquito Larvae	G	Intraspecific	20	1	L.G.M.20	G-Intraspecific-20	ML_G
+16s-L-G-M-20-66_S162_L001	L.G.M.20_66	Mosquito Larvae	Mosquito Larvae	G	Intraspecific	20	1	L.G.M.20	G-Intraspecific-20	ML_G
+16s-L-G-M-20-90_S186_L001	L.G.M.20_90	Mosquito Larvae	Mosquito Larvae	G	Intraspecific	20	1	L.G.M.20	G-Intraspecific-20	ML_G
+16s-L-G-M-40-2_S98_L001	L.G.M.40_2	4th instar mosquito larva(e)	Mosquito Larvae	G	Intraspecific	40	1	L.G.M.40	G-Intraspecific-40	ML_G
+16s-L-G-M-40-20_S116_L001	L.G.M.40_20	Mosquito Larvae	Mosquito Larvae	G	Intraspecific	40	1	L.G.M.40	G-Intraspecific-40	ML_G
+16s-L-G-M-40-21_S117_L001	L.G.M.40_21	Mosquito Larvae	Mosquito Larvae	G	Intraspecific	40	1	L.G.M.40	G-Intraspecific-40	ML_G
+16s-L-G-M-40-22_S118_L001	L.G.M.40_22	Mosquito Larvae	Mosquito Larvae	G	Intraspecific	40	1	L.G.M.40	G-Intraspecific-40	ML_G
+16s-L-G-M-40-3_S99_L001	L.G.M.40_3	4th instar mosquito larva(e)	Mosquito Larvae	G	Intraspecific	40	1	L.G.M.40	G-Intraspecific-40	ML_G
+16s-L-G-M-40-4_S100_L001	L.G.M.40_4	4th instar mosquito larva(e)	Mosquito Larvae	G	Intraspecific	40	1	L.G.M.40	G-Intraspecific-40	ML_G
+16s-L-G-M-40-44_S140_L001	L.G.M.40_44	Mosquito Larvae	Mosquito Larvae	G	Intraspecific	40	1	L.G.M.40	G-Intraspecific-40	ML_G
+16s-L-G-M-40-45_S141_L001	L.G.M.40_45	Mosquito Larvae	Mosquito Larvae	G	Intraspecific	40	1	L.G.M.40	G-Intraspecific-40	ML_G
+16s-L-G-M-40-46_S142_L001	L.G.M.40_46	Mosquito Larvae	Mosquito Larvae	G	Intraspecific	40	1	L.G.M.40	G-Intraspecific-40	ML_G
+16s-L-G-M-40-67_S163_L001	L.G.M.40_67	Mosquito Larvae	Mosquito Larvae	G	Intraspecific	40	1	L.G.M.40	G-Intraspecific-40	ML_G
+16s-L-G-M-40-68_S164_L001	L.G.M.40_68	Mosquito Larvae	Mosquito Larvae	G	Intraspecific	40	1	L.G.M.40	G-Intraspecific-40	ML_G
+16s-L-G-M-40-69_S165_L001	L.G.M.40_69	Mosquito Larvae	Mosquito Larvae	G	Intraspecific	40	1	L.G.M.40	G-Intraspecific-40	ML_G
+16s-L-G-M-40-91_S187_L001	L.G.M.40_91	Mosquito Larvae	Mosquito Larvae	G	Intraspecific	40	1	L.G.M.40	G-Intraspecific-40	ML_G
+16s-L-G-M-40-92_S188_L001	L.G.M.40_92	Mosquito Larvae	Mosquito Larvae	G	Intraspecific	40	1	L.G.M.40	G-Intraspecific-40	ML_G
+16s-L-G-MS-20-23_S119_L001	L.G.MS.20_23	Mosquito Larvae	Mosquito Larvae	G	Interspecific	20	1	L.G.MS.20	G-Interspecific-20	ML_G
+16s-L-G-MS-20-24_S120_L001	L.G.MS.20_24	Mosquito Larvae	Mosquito Larvae	G	Interspecific	20	1	L.G.MS.20	G-Interspecific-20	ML_G
+16s-L-G-MS-20-47_S143_L001	L.G.MS.20_47	Mosquito Larvae	Mosquito Larvae	G	Interspecific	20	1	L.G.MS.20	G-Interspecific-20	ML_G
+16s-L-G-MS-20-48_S144_L001	L.G.MS.20_48	Mosquito Larvae	Mosquito Larvae	G	Interspecific	20	1	L.G.MS.20	G-Interspecific-20	ML_G
+16s-L-G-MS-20-5_S101_L001	L.G.MS.20_5	4th instar mosquito larva(e)	Mosquito Larvae	G	Interspecific	20	1	L.G.MS.20	G-Interspecific-20	ML_G
+16s-L-G-MS-20-70_S166_L001	L.G.MS.20_70	Mosquito Larvae	Mosquito Larvae	G	Interspecific	20	1	L.G.MS.20	G-Interspecific-20	ML_G
+16s-L-G-MS-20-71_S167_L001	L.G.MS.20_71	Mosquito Larvae	Mosquito Larvae	G	Interspecific	20	1	L.G.MS.20	G-Interspecific-20	ML_G
+16s-L-G-MS-20-72_S168_L001	L.G.MS.20_72	Mosquito Larvae	Mosquito Larvae	G	Interspecific	20	1	L.G.MS.20	G-Interspecific-20	ML_G
+16s-L-G-MS-20-93_S189_L001	L.G.MS.20_93	Mosquito Larvae	Mosquito Larvae	G	Interspecific	20	1	L.G.MS.20	G-Interspecific-20	ML_G
+16s-L-G-MS-20-94_S190_L001	L.G.MS.20_94	Mosquito Larvae	Mosquito Larvae	G	Interspecific	20	1	L.G.MS.20	G-Interspecific-20	ML_G
+16s-L-G-MS-40-25_S121_L001	L.G.MS.40_25	Mosquito Larvae	Mosquito Larvae	G	Interspecific	40	1	L.G.MS.40	G-Interspecific-40	ML_G
+16s-L-G-MS-40-26_S122_L001	L.G.MS.40_26	Mosquito Larvae	Mosquito Larvae	G	Interspecific	40	1	L.G.MS.40	G-Interspecific-40	ML_G
+16s-L-G-MS-40-27_S123_L001	L.G.MS.40_27	Mosquito Larvae	Mosquito Larvae	G	Interspecific	40	1	L.G.MS.40	G-Interspecific-40	ML_G
+16s-L-G-MS-40-6_S102_L001	L.G.MS.40_6	4th instar mosquito larva(e)	Mosquito Larvae	G	Interspecific	40	1	L.G.MS.40	G-Interspecific-40	ML_G
+16s-L-G-MS-40-73_S169_L001	L.G.MS.40_73	Mosquito Larvae	Mosquito Larvae	G	Interspecific	40	1	L.G.MS.40	G-Interspecific-40	ML_G
+16s-L-G-MS-40-74_S170_L001	L.G.MS.40_74	Mosquito Larvae	Mosquito Larvae	G	Interspecific	40	1	L.G.MS.40	G-Interspecific-40	ML_G
+16s-L-G-MS-40-75_S171_L001	L.G.MS.40_75	Mosquito Larvae	Mosquito Larvae	G	Interspecific	40	1	L.G.MS.40	G-Interspecific-40	ML_G
+16s-L-G-MS-40-95_S191_L001	L.G.MS.40_95	Mosquito Larvae	Mosquito Larvae	G	Interspecific	40	1	L.G.MS.40	G-Interspecific-40	ML_G
+16s-L-G-MS-40-96_S192_L001	L.G.MS.40_96	Mosquito Larvae	Mosquito Larvae	G	Interspecific	40	1	L.G.MS.40	G-Interspecific-40	ML_G
+16s-L-G-MS-40-97_S193_L001	L.G.MS.40_97	Mosquito Larvae	Mosquito Larvae	G	Interspecific	40	2	L.G.MS.40	G-Interspecific-40	ML_G
+16s-L-GN-M-20-10_S106_L001	L.GN.M.20_10	4th instar mosquito larva(e)	Mosquito Larvae	GN	Intraspecific	20	1	L.GN.M.20	GN-Intraspecific-20	ML_GN
+16s-L-GN-M-20-100_S196_L001	L.GN.M.20_100	Mosquito Larvae	Mosquito Larvae	GN	Intraspecific	20	2	L.GN.M.20	GN-Intraspecific-20	ML_GN
+16s-L-GN-M-20-101_S197_L001	L.GN.M.20_101	Mosquito Larvae	Mosquito Larvae	GN	Intraspecific	20	2	L.GN.M.20	GN-Intraspecific-20	ML_GN
+16s-L-GN-M-20-102_S198_L001	L.GN.M.20_102	Mosquito Larvae	Mosquito Larvae	GN	Intraspecific	20	2	L.GN.M.20	GN-Intraspecific-20	ML_GN
+16s-L-GN-M-20-30_S126_L001	L.GN.M.20_30	Mosquito Larvae	Mosquito Larvae	GN	Intraspecific	20	1	L.GN.M.20	GN-Intraspecific-20	ML_GN
+16s-L-GN-M-20-31_S127_L001	L.GN.M.20_31	Mosquito Larvae	Mosquito Larvae	GN	Intraspecific	20	1	L.GN.M.20	GN-Intraspecific-20	ML_GN
+16s-L-GN-M-20-32_S128_L001	L.GN.M.20_32	Mosquito Larvae	Mosquito Larvae	GN	Intraspecific	20	1	L.GN.M.20	GN-Intraspecific-20	ML_GN
+16s-L-GN-M-20-52_S148_L001	L.GN.M.20_52	Mosquito Larvae	Mosquito Larvae	GN	Intraspecific	20	1	L.GN.M.20	GN-Intraspecific-20	ML_GN
+16s-L-GN-M-20-53_S149_L001	L.GN.M.20_53	Mosquito Larvae	Mosquito Larvae	GN	Intraspecific	20	1	L.GN.M.20	GN-Intraspecific-20	ML_GN
+16s-L-GN-M-20-54_S150_L001	L.GN.M.20_54	Mosquito Larvae	Mosquito Larvae	GN	Intraspecific	20	1	L.GN.M.20	GN-Intraspecific-20	ML_GN
+16s-L-GN-M-20-78_S174_L001	L.GN.M.20_78	Mosquito Larvae	Mosquito Larvae	GN	Intraspecific	20	1	L.GN.M.20	GN-Intraspecific-20	ML_GN
+16s-L-GN-M-20-79_S175_L001	L.GN.M.20_79	Mosquito Larvae	Mosquito Larvae	GN	Intraspecific	20	1	L.GN.M.20	GN-Intraspecific-20	ML_GN
+16s-L-GN-M-20-8_S104_L001	L.GN.M.20_8	4th instar mosquito larva(e)	Mosquito Larvae	GN	Intraspecific	20	1	L.GN.M.20	GN-Intraspecific-20	ML_GN
+16s-L-GN-M-20-80_S176_L001	L.GN.M.20_80	Mosquito Larvae	Mosquito Larvae	GN	Intraspecific	20	1	L.GN.M.20	GN-Intraspecific-20	ML_GN
+16s-L-GN-M-20-9_S105_L001	L.GN.M.20_9	4th instar mosquito larva(e)	Mosquito Larvae	GN	Intraspecific	20	1	L.GN.M.20	GN-Intraspecific-20	ML_GN
+16s-L-GN-M-40-11_S107_L001	L.GN.M.40_11	4th instar mosquito larva(e)	Mosquito Larvae	GN	Intraspecific	40	1	L.GN.M.40	GN-Intraspecific-40	ML_GN
+16s-L-GN-M-40-12_S108_L001	L.GN.M.40_12	4th instar mosquito larva(e)	Mosquito Larvae	GN	Intraspecific	40	1	L.GN.M.40	GN-Intraspecific-40	ML_GN
+16s-L-GN-M-40-13_S109_L001	L.GN.M.40_13	4th instar mosquito larva(e)	Mosquito Larvae	GN	Intraspecific	40	1	L.GN.M.40	GN-Intraspecific-40	ML_GN
+16s-L-GN-M-40-33_S129_L001	L.GN.M.40_33	Mosquito Larvae	Mosquito Larvae	GN	Intraspecific	40	1	L.GN.M.40	GN-Intraspecific-40	ML_GN
+16s-L-GN-M-40-34_S130_L001	L.GN.M.40_34	Mosquito Larvae	Mosquito Larvae	GN	Intraspecific	40	1	L.GN.M.40	GN-Intraspecific-40	ML_GN
+16s-L-GN-M-40-35_S131_L001	L.GN.M.40_35	Mosquito Larvae	Mosquito Larvae	GN	Intraspecific	40	1	L.GN.M.40	GN-Intraspecific-40	ML_GN
+16s-L-GN-M-40-55_S151_L001	L.GN.M.40_55	Mosquito Larvae	Mosquito Larvae	GN	Intraspecific	40	1	L.GN.M.40	GN-Intraspecific-40	ML_GN
+16s-L-GN-M-40-56_S152_L001	L.GN.M.40_56	Mosquito Larvae	Mosquito Larvae	GN	Intraspecific	40	1	L.GN.M.40	GN-Intraspecific-40	ML_GN
+16s-L-GN-M-40-57_S153_L001	L.GN.M.40_57	Mosquito Larvae	Mosquito Larvae	GN	Intraspecific	40	1	L.GN.M.40	GN-Intraspecific-40	ML_GN
+16s-L-GN-M-40-81_S177_L001	L.GN.M.40_81	Mosquito Larvae	Mosquito Larvae	GN	Intraspecific	40	1	L.GN.M.40	GN-Intraspecific-40	ML_GN
+16s-L-GN-M-40-82_S178_L001	L.GN.M.40_82	Mosquito Larvae	Mosquito Larvae	GN	Intraspecific	40	1	L.GN.M.40	GN-Intraspecific-40	ML_GN
+16s-L-GN-M-40-83_S179_L001	L.GN.M.40_83	Mosquito Larvae	Mosquito Larvae	GN	Intraspecific	40	1	L.GN.M.40	GN-Intraspecific-40	ML_GN
+16s-L-GN-MS-20-103_S199_L001	L.GN.MS.20_103	Mosquito Larvae	Mosquito Larvae	GN	Interspecific	20	2	L.GN.MS.20	GN-Interspecific-20	ML_GN
+16s-L-GN-MS-20-104_S200_L001	L.GN.MS.20_104	Mosquito Larvae	Mosquito Larvae	GN	Interspecific	20	2	L.GN.MS.20	GN-Interspecific-20	ML_GN
+16s-L-GN-MS-20-14_S110_L001	L.GN.MS.20_14	4th instar mosquito larva(e)	Mosquito Larvae	GN	Interspecific	20	1	L.GN.MS.20	GN-Interspecific-20	ML_GN
+16s-L-GN-MS-20-36_S132_L001	L.GN.MS.20_36	Mosquito Larvae	Mosquito Larvae	GN	Interspecific	20	1	L.GN.MS.20	GN-Interspecific-20	ML_GN
+16s-L-GN-MS-20-37_S133_L001	L.GN.MS.20_37	Mosquito Larvae	Mosquito Larvae	GN	Interspecific	20	1	L.GN.MS.20	GN-Interspecific-20	ML_GN
+16s-L-GN-MS-20-58_S154_L001	L.GN.MS.20_58	Mosquito Larvae	Mosquito Larvae	GN	Interspecific	20	1	L.GN.MS.20	GN-Interspecific-20	ML_GN
+16s-L-GN-MS-20-59_S155_L001	L.GN.MS.20_59	Mosquito Larvae	Mosquito Larvae	GN	Interspecific	20	1	L.GN.MS.20	GN-Interspecific-20	ML_GN
+16s-L-GN-MS-20-60_S156_L001	L.GN.MS.20_60	Mosquito Larvae	Mosquito Larvae	GN	Interspecific	20	1	L.GN.MS.20	GN-Interspecific-20	ML_GN
+16s-L-GN-MS-20-84_S180_L001	L.GN.MS.20_84	Mosquito Larvae	Mosquito Larvae	GN	Interspecific	20	1	L.GN.MS.20	GN-Interspecific-20	ML_GN
+16s-L-GN-MS-20-85_S181_L001	L.GN.MS.20_85	Mosquito Larvae	Mosquito Larvae	GN	Interspecific	20	1	L.GN.MS.20	GN-Interspecific-20	ML_GN
+16s-L-GN-MS-20-86_S182_L001	L.GN.MS.20_86	Mosquito Larvae	Mosquito Larvae	GN	Interspecific	20	1	L.GN.MS.20	GN-Interspecific-20	ML_GN
+16s-L-GN-MS-40-105_S201_L001	L.GN.MS.40_105	Mosquito Larvae	Mosquito Larvae	GN	Interspecific	40	2	L.GN.MS.40	GN-Interspecific-40	ML_GN
+16s-L-GN-MS-40-106_S202_L001	L.GN.MS.40_106	Mosquito Larvae	Mosquito Larvae	GN	Interspecific	40	2	L.GN.MS.40	GN-Interspecific-40	ML_GN
+16s-L-GN-MS-40-107_S203_L001	L.GN.MS.40_107	Mosquito Larvae	Mosquito Larvae	GN	Interspecific	40	2	L.GN.MS.40	GN-Interspecific-40	ML_GN
+16s-L-GN-MS-40-15_S111_L001	L.GN.MS.40_15	4th instar mosquito larva(e)	Mosquito Larvae	GN	Interspecific	40	1	L.GN.MS.40	GN-Interspecific-40	ML_GN
+16s-L-GN-MS-40-16_S112_L001	L.GN.MS.40_16	4th instar mosquito larva(e)	Mosquito Larvae	GN	Interspecific	40	1	L.GN.MS.40	GN-Interspecific-40	ML_GN
+16s-L-GN-MS-40-17_S113_L001	L.GN.MS.40_17	4th instar mosquito larva(e)	Mosquito Larvae	GN	Interspecific	40	1	L.GN.MS.40	GN-Interspecific-40	ML_GN
+16s-L-GN-MS-40-38_S134_L001	L.GN.MS.40_38	Mosquito Larvae	Mosquito Larvae	GN	Interspecific	40	1	L.GN.MS.40	GN-Interspecific-40	ML_GN
+16s-L-GN-MS-40-39_S135_L001	L.GN.MS.40_39	Mosquito Larvae	Mosquito Larvae	GN	Interspecific	40	1	L.GN.MS.40	GN-Interspecific-40	ML_GN
+16s-L-GN-MS-40-40_S136_L001	L.GN.MS.40_40	Mosquito Larvae	Mosquito Larvae	GN	Interspecific	40	1	L.GN.MS.40	GN-Interspecific-40	ML_GN
+16s-L-GN-MS-40-61_S157_L001	L.GN.MS.40_61	Mosquito Larvae	Mosquito Larvae	GN	Interspecific	40	1	L.GN.MS.40	GN-Interspecific-40	ML_GN
+16s-L-GN-MS-40-62_S158_L001	L.GN.MS.40_62	Mosquito Larvae	Mosquito Larvae	GN	Interspecific	40	1	L.GN.MS.40	GN-Interspecific-40	ML_GN
+16s-L-GN-MS-40-63_S159_L001	L.GN.MS.40_63	Mosquito Larvae	Mosquito Larvae	GN	Interspecific	40	1	L.GN.MS.40	GN-Interspecific-40	ML_GN
+16s-L-GN-MS-40-87_S183_L001	L.GN.MS.40_87	Mosquito Larvae	Mosquito Larvae	GN	Interspecific	40	1	L.GN.MS.40	GN-Interspecific-40	ML_GN
+16s-L-GN-MS-40-88_S184_L001	L.GN.MS.40_88	Mosquito Larvae	Mosquito Larvae	GN	Interspecific	40	1	L.GN.MS.40	GN-Interspecific-40	ML_GN
+16s-L-GN-MS-40-89_S185_L001	L.GN.MS.40_89	Mosquito Larvae	Mosquito Larvae	GN	Interspecific	40	1	L.GN.MS.40	GN-Interspecific-40	ML_GN

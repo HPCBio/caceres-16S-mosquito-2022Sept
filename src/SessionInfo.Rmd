@@ -1,7 +1,7 @@
 # Session
 
 ```{r}
-source("~/research/biotech/young-chae_kim/2021-Fall-Microbiome/src/common_code.R", local = knitr::knit_global())
+source("~/Desktop/hpcbio-git/caceres-16S-mosquito-2022Sept/src/common_code.R", local = knitr::knit_global())
 ```
 
 ```{r }

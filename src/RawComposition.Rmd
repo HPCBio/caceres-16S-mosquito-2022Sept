@@ -9,8 +9,9 @@ physeq <- readRDS('results/physeq.raw.RDS')
 
 # Composition plots (unfiltered data)
 
-Overall compositional summary (stacked bar plots) for all unfiltered samples.  In this example here are the top 20 families by composition per sample, split by treatment. Data has been transformed to relative abundance (no prior added). Note again that most can be classified to the family or order rank, but genus and species ranks see few reliable assignments. 
+Overall compositional summary (stacked bar plots) for all unfiltered samples.  In this example I pulled out the top 20 families by composition per sample, split by treatment. Data has been transformed to relative abundance (no prior added).
 
+There are no Species-level assignments for top 20 families, and the top 20 families only make up, at most, 20% of the total abundance. This indicates that we have very diverse communities. This is not surprising considering that we have 18,538 ASVs to start with. It will be beneficial to glom ASVs at the species or genus level to reduce the number of ASVs to something more manageable. But I don't imagine these raw composition plots will be particularily useful until after prevalence filtering and taxa glomming.
 
 ```{r }
 #Get relative abundance
@@ -27,7 +28,7 @@ tax.ordered <- names(sort(taxa_sums(physeq), TRUE)[1:20])
 physeq.plot <- subset_taxa(physeq.prop, taxa_names(physeq) %in% tax.ordered)
 ```
 
-There are no Species-level assignments for top 20 families, and the top 20 families only make up, at most, 20% of the total abundance. This indicates that we have very diverse communities here with high taxonomic resolution. This is not surprising considering that we have 18,538 ASVs to start with. It will be beneficial to glom ASVs at the species or genus level to reduce this high resolution we're seeing.
+
 
 
 ```{r, results='asis', fig.keep='all', message = FALSE, warning = FALSE, echo = FALSE}

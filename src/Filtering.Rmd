@@ -38,11 +38,12 @@ Not at the moment, so will skip the following step.
 
 ## Prune out any other samples?
 
-Will remove Infusion samples for now, but can add them back in later.
+Will remove the sample that has less than 5000 counts.
 
 ```{r }
- physeq.filtered <- prune_samples(!(sample_data(physeq.filtered)$Density == "Infusion"), physeq.filtered)
- physeq.filtered
+#physeq.filtered <- prune_samples(!(sample_data(physeq.filtered)$Density == "Infusion"), physeq.filtered)
+physeq.filtered <- prune_samples(sample_sums(physeq.filtered) > 10000, physeq.filtered)
+physeq.filtered
 ```
 
 ## Zero-count taxa
@@ -53,7 +54,7 @@ If we remove samples, there may be some taxa that are no longer present in the s
 table(taxa_sums(physeq.filtered) == 0)
 ```
 
-After removing Infusion samples, 571 are 0 count.
+After removing Infusion samples, 579 are 0 count.
 
 ```{r}
 physeq.filtered <- subset_taxa(physeq.filtered, taxa_sums(physeq.filtered) > 0)
@@ -105,7 +106,7 @@ How many Phylum are unassigned?  (TRUE means these are unassigned)
 table(is.na(tax_table(physeq.filtered)[,'Phylum'])) %>% kable
 ```
 
-22 are not assigned at the phylum rank.  Export the unassigned sequences to a file.
+14 are not assigned at the phylum rank.  Export the unassigned sequences to a file.
 
 ```{r}
 unasn <- subset_taxa(physeq.filtered, is.na(Phylum))
@@ -283,12 +284,12 @@ We skip this in favor of precedence filtering, but will plot a histogram of samp
 hist(sample_sums(physeq.filtered), breaks = 50)
 ```
 
-Pretty reasonable spread. However there is one samples below our standard 10k count limit, so may remove this later.
+Pretty reasonable spread.
 
 
 ## Basic overview
 
-Let's look at the data.  We have `r ntaxa(physeq)` taxa and `r nsamples(physeq)` samples.
+Let's look at the data.  We have `r ntaxa(physeq.filtered)` taxa and `r nsamples(physeq.filtered)` samples.
 
 Here are the sample variables for analysis:
 
@@ -309,10 +310,11 @@ ex0 = prune_taxa(myTaxa1, physeq.filtered)
 plot_tree(ex0, label.tips = 'Family',
           ladderize = "left",
           justify = "left",
-          color = 'Extraction_type'
+          color = 'Simple_extraction'
           )
 ```
-Can see that the 50 most abundant ASVs are dominant in water samples, and seeing mostly Arcobacteraceae family in all extraction types.
+
+We can see that the 50 most abundant ASVs are dominant in water samples, and seeing a lot of Arcobacteraceae family in all extraction types.
 
 ```{r}
 saveRDS(physeq.filtered, 'results/physeq.filtered.RDS')

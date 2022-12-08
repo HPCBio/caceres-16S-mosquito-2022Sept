@@ -27,6 +27,7 @@ Some taxa with very low counts overall; depending on their prevalence this may b
 ```{r PrevalenceFiltering-9 }
 hist(log2(taxa_sums(physeq.filtered)), 1000)
 ```
+
 There are a lot at the low end.
 
 What about sample counts?  What is the range in total counts per sample?
@@ -48,11 +49,11 @@ p <- p + geom_bar(stat = 'identity' )
 p <- p + theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ggplotly(p)
 ```
-Water samples do seem to have more sequences, except for one that will likely need to be removed.
+Water samples do seem to have more sequences, except for one that could be removed due do being so much lower than the others. Just let me know.
 
 How do the ASV counts correlate with the read counts?
 
-```{r PrevalenceFiltering-12 }
+```{r PrevalenceFiltering-12, echo=FALSE, message=FALSE}
 myData <- data.frame(
   Name = sample_data(physeq.filtered)$Label,
   OTUSums = sample_sums(physeq.filtered),
@@ -215,7 +216,6 @@ We will skip tip agglomeration in favor of taxa agglomeration. But first let's d
 <!-- ``` -->
 
 
-
 ## Prevalence filtering
 
 For the filtering, let's assign the original filtered data to a temp variable prior to prevalence filtering.  Here we are using the tip agglomerated data
@@ -233,12 +233,6 @@ table(tax_table(physeq0)[,"Phylum"], exclude = NULL)
 ```
 
 There are a handful with low features (1-4 OTUs). No NA's present, so don't need to filter.
-
-
-# ```{r PrevalenceFiltering-28 }
-# physeq0 <- subset_taxa(physeq0, !is.na(Phylum) & !Phylum %in% c("", "uncharacterized"))
-# physeq0
-# ```
 
 
 Now, let's get an idea how many taxa in the samples have an ASV count greater than 1.  We can make this more or less strict as needed.
@@ -324,6 +318,26 @@ Phyloseq's tax_glom method is analagous to it's tip_glom method, but it uses cat
 
 What is the effect of taxonomic agglomeration per rank if we were to allow for the removal of NA's? If we don't allow NA's to be removed, then we lose nothing. They just get grouped to the next available ranking. I would not recommend removing NA's as it could skew beta diversity measurements downstream, but it is interesting to see how many sequences are ranked to each level.
 
+What is the effect of taxonomic agglomeration per rank? Let's do a quick run through on the samples; ranks that are not assigned are removed by default, so let's see what happens.
+
+```{r PrevalenceFiltering-23 }
+taxglom_per_rank = function(physeq.prev, rank = "Species") {
+  # TODO: add sanity check
+  glommedPhyseq <- tax_glom(physeq.prev, taxrank = rank, NArm = TRUE)
+  p <- ggplot(data = data.frame(
+      SampleLoss = sample_sums(glommedPhyseq) / sample_sums(physeq.filtered),
+      Names = factor(sample_data(glommedPhyseq)$Label,
+                     ordered = TRUE,
+                     levels = sample_data(glommedPhyseq)$Label),
+      Group = factor(sample_data(glommedPhyseq)$Env_Comp_Den, ordered = TRUE)
+  ), aes(y = SampleLoss, x = Names, fill = Group)) +
+    geom_bar(stat = 'identity' ) +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+    ggtitle(paste0("Rank: ", rank))
+  return(p)
+}
+```
+
 
 ```{r PrevalenceFiltering-24 }
 tmp <- as(tax_table(physeq.prev), 'matrix')
@@ -341,6 +355,7 @@ plots <- lapply(ranks, function(x) {
 
 grid.arrange(grobs = plots)
 ```
+
 Quite a bit lost with species, but still pretty decent for Genus. We know that Genus will be good for plotting downstream.
 
 Are there rows in there with 'NA'?

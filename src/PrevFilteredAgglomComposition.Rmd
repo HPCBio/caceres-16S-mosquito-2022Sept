@@ -16,15 +16,15 @@ Let's look at the taxonomic composition now that the data is filtered.
 physeq.prev.prop <- transform_sample_counts(physeq.prev, function(x) x/sum(x) )
 sample_data(physeq.prev.prop)$SampleSums <- sample_sums(physeq.prev)
 
-#Pull out top 20 families
+#Pull out top 50 families
 #physeq.subset <- tax_glom(physeq.prev.prop, taxrank = "Family")
-#tax.ordered <- names(sort(taxa_sums(physeq.subset), TRUE)[1:20])
+#tax.ordered <- names(sort(taxa_sums(physeq.subset), TRUE)[1:50])
 #physeq.plot <- subset_taxa(physeq.prev.prop, taxa_names(physeq.prev.prop) %in% tax.ordered)
 
 physeq.plot <- physeq.prev.prop
 ```
 
-Overall compositional summary (stacked bar plots) for all prevalence filtered and tip agglomerated samples.  In this example here are the top 20 families by composition per sample, split by treatment.  Note again that most can be classified to the family or order rank, but genus and species ranks see few reliable assignments.
+Overall compositional summary (stacked bar plots) for all prevalence filtered and tip agglomerated samples.  In this example, all ASVs are included.
 
 ```{r, results='asis', fig.keep='all', message = FALSE, warning = FALSE, echo = FALSE}
 ranks <- c("Class", "Order", "Family", "Genus", "Species")

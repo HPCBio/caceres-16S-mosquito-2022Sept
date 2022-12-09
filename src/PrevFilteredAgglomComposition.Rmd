@@ -33,16 +33,16 @@ plots <- lapply(ranks, function (x) {
   #Plot relative abundance
   p <- plot_bar(physeq.plot, x="Label", fill = x)
   p1 <- p + theme(legend.key.size = unit(0.25, 'cm'), #change legend key size
-        legend.title = element_text(size=6), #change legend title font size
-        legend.text = element_text(size=6),
+        legend.title = element_text(size=8), #change legend title font size
+        legend.text = element_text(size=8),
         axis.title.x=element_blank(),
         axis.text.x = element_text(size = 5),
         axis.ticks.x = element_blank()) +
+        scale_fill_manual(values = dittoSeq::dittoColors(3)) +
         ylab("Relative Abundance") +
-        facet_grid(.~Extr_Env, scales = "free_x", space = "free_x")
-       # guides(fill = guide_legend(nrow = 30))
+        facet_grid(.~Extr_Env, scales = "free_x", space = "free_x") +
+        guides(fill = guide_legend(nrow = 50))
   
-#p <- composition_df(physeq, x, minprop = 0.05, keepcols = kc)
 #p + facet_wrap(~Location, scales = "free_x", nrow = 1)
   #ggplot(p, aes(x = Label, y = Proportion, fill = print(x, quote=FALSE))) + geom_col() + 
   #  facet_wrap(~Treatment, scales = "free_x") + 
@@ -50,6 +50,8 @@ plots <- lapply(ranks, function (x) {
   #  theme(axis.text.x = element_text(size = 8, angle = 45, hjust = 1, vjust = 0.5))
  ggplotly(p1)
  # p1
+ #  f1 <- paste("results/final-plots/taxa-rank-" , x , "_barplot_splitby_environ.pdf", sep = "")
+ # ggsave(p1, filename = f1, width = 14, height = 8, device = "pdf")
 })
 
 names(plots) <- ranks

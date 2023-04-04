@@ -222,7 +222,7 @@ Results below are for the Bray-Curtis metric, but I also post results of Weighte
 
 ```{r }
 # Remove infusion samples
-physeq.active <- prune_samples(sample_data(physeq.active)$Density != "Sample Water", physeq.active)
+physeq.active <- prune_samples(sample_data(physeq.active)$Density != "Stock Water", physeq.active)
 
 finalPhyseq.meta <- as(sample_data(physeq.active), "data.frame")
 finalPhyseq.prop.dist.bc <- phyloseq::distance(physeq.active, method = "bray")

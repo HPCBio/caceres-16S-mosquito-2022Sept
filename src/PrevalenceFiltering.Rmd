@@ -235,7 +235,7 @@ table(tax_table(physeq0)[,"Phylum"], exclude = NULL)
 There are a handful with low features (1-4 OTUs). No NA's present, so don't need to filter.
 
 
-Now, let's get an idea how many taxa in the samples have an ASV count greater than 1.  We can make this more or less strict as needed.
+Now, let's get an idea prevalence, or how many samples each ASV is present in.  We can make this more or less strict as needed, but for now we're only including ASVs that are present in at least 1 sample.
 
 ```{r PrevalenceFiltering-29 }
 # What is this doing?  It calculates a vector with the count being the # samples with a count > 0.
@@ -253,7 +253,7 @@ prevdf <- data.frame(Prevalence =  prevdf, # num samples counts are > 0
                      tax_table(physeq0)) # tax ID and ranks
 ```
 
-Here is a quick summary of the prevalence results.  These are performed per ASV but summarized at the Phylum rank. Sum is the number of sequences per phylum and mean is the average number of sequences per sample.
+Here is a quick summary of the prevalence results.  These are performed per ASV but summarized at the Phylum rank.
 
 ```{r PrevalenceFiltering-30 }
 # a quick high level summary at the Phylum rank.
@@ -381,7 +381,7 @@ A steep increase in unassigned ranks from Genus to Family. Let's try Genus to st
  physeq.glom <- tax_glom(physeq.prev, taxrank = 'Species', NArm = FALSE)
  physeq.glom
 ```
-155 ASVs/features are retained.
+159 ASVs/features are retained.
 
 
 ```{r PrevalenceFiltering-35 }

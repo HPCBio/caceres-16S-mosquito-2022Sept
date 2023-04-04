@@ -16,15 +16,12 @@ Let's look at the taxonomic composition now that the data is filtered.
 physeq.prev.prop <- transform_sample_counts(physeq.prev, function(x) x/sum(x) )
 sample_data(physeq.prev.prop)$SampleSums <- sample_sums(physeq.prev)
 
-#Pull out top 50 families
-#physeq.subset <- tax_glom(physeq.prev.prop, taxrank = "Family")
-#tax.ordered <- names(sort(taxa_sums(physeq.subset), TRUE)[1:50])
-#physeq.plot <- subset_taxa(physeq.prev.prop, taxa_names(physeq.prev.prop) %in% tax.ordered)
+physeq.prev.prop <- physeq.prev.prop %>% tax_fix(unknowns = c(" unidentified"," uncultured", " Clostridiaceae_bacterium", " Clostridium_sp.", " uncultured_bacterium", " uncultured_prokaryote", " unidentified_eubacterium"))
 
 physeq.plot <- physeq.prev.prop
 ```
 
-Overall compositional summary (stacked bar plots) for all prevalence filtered and tip agglomerated samples.  In this example, all ASVs are included.
+Overall compositional summary (stacked bar plots) for all prevalence filtered and tip agglomerated samples.  In this example, just the top 10 ASVs are included.
 
 ```{r, results='asis', fig.keep='all', message = FALSE, warning = FALSE, echo = FALSE}
 ranks <- c("Class", "Order", "Family", "Genus", "Species")
@@ -32,27 +29,23 @@ plots <- lapply(ranks, function (x) {
 
   #Plot relative abundance
   p <- plot_bar(physeq.plot, x="Label", fill = x)
+  p <- comp_barplot(physeq.plot, x, n_taxa = 20, facet_by = "Env_Comp_Den", palette = dittoSeq::dittoColors())
   p1 <- p + theme(legend.key.size = unit(0.25, 'cm'), #change legend key size
-        legend.title = element_text(size=8), #change legend title font size
-        legend.text = element_text(size=8),
+        legend.title = element_text(size=6), #change legend title font size
+        legend.text = element_text(size=6),
         axis.title.x=element_blank(),
-        axis.text.x = element_text(size = 5),
+        axis.text.x = element_blank(),
         axis.ticks.x = element_blank()) +
-        scale_fill_manual(values = dittoSeq::dittoColors(3)) +
         ylab("Relative Abundance") +
-        facet_grid(.~Extr_Env, scales = "free_x", space = "free_x") +
-        guides(fill = guide_legend(nrow = 50))
-  
-#p + facet_wrap(~Location, scales = "free_x", nrow = 1)
-  #ggplot(p, aes(x = Label, y = Proportion, fill = print(x, quote=FALSE))) + geom_col() + 
-  #  facet_wrap(~Treatment, scales = "free_x") + 
-  #  scale_fill_manual(values = dittoSeq::dittoColors(1)) +
-  #  theme(axis.text.x = element_text(size = 8, angle = 45, hjust = 1, vjust = 0.5))
- ggplotly(p1)
- # p1
- #  f1 <- paste("results/final-plots/taxa-rank-" , x , "_barplot_splitby_environ.pdf", sep = "")
- # ggsave(p1, filename = f1, width = 14, height = 8, device = "pdf")
+        guides(fill = guide_legend(nrow = 30))
+      #  facet_grid(.~trt, scales = "free_x", space = "free_x")
+
+ p1
+ f1 <- paste("../results/final-plots/taxa-rank-" , x , "_barplot_top20_splitby_Env_Comp_Den.pdf", sep = "")
+ ggsave(f1, device = "pdf")
+ #, width = 14, height = 8, device = "pdf"
 })
+
 
 names(plots) <- ranks
 

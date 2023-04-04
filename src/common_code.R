@@ -9,20 +9,8 @@ library(scales)
 library(knitr)
 library(gridExtra)
 
-# this seems to have issues with caching and phyloseq
-# library(ggtree) 
-
-# For normalization
-# library(metagenomeSeq)
-
 # phylogenetic tree input
 library(ape)
-
-# read/modify BIOM 
-# library(biomformat)
-
-# ggplot functions for trees and dendrograms
-# library(ggdendro)
 
 # distance measures, PERMANOVA, ANOSIM
 library(vegan)
@@ -35,6 +23,34 @@ library(mixOmics)
 
 # to get labels2color
 library(WGCNA)
+
+# Libraries Negin added
+library(readxl)
+library(Biostrings)
+library(car)
+#library(multcomp)
+library(nlme)
+library(pairwiseAdonis) #install_github("pmartinezarbizu/pairwiseAdonis/pairwiseAdonis")
+library(microViz)
+library(ggplot2)
+library(kableExtra)
+library(dplyr)
+library(ggrepel)
+library(zCompositions)
+library(corrplot)
+library(devtools)
+#install_github("zdk123/SpiecEasi")
+#library(SpiecEasi)
+library(PerformanceAnalytics)
+library(GGally)
+library(ggcorrplot)
+library(gclus)
+library(Hmisc)
+
+#Loading WGCNA library for first time also requires:
+##BiocManager::install("GO.db")
+##BiocManager::install("impute")
+##BiocManager::install("preprocessCore")
 
 # mixed models (needs to be updated)
 # library(lme4)

@@ -148,10 +148,10 @@ p1 = plot_ordination(physeq.active,
                      type="samples",
                      color="Density",
                      shape = "Competition",
-                     title="Samples") + geom_point(size = 2.5)
-p1 + ggtitle("PCoA, Bray Curtis distance")
-#ggplotly(p1 + ggtitle("PCoA, Bray Curtis distance"))
-#+  scale_fill_viridis_d()
+                     label = "Environment",
+                     title="PCoA, Bray Curtis distance") + geom_point(size = 2.5)
+p1
+ggsave("pcoa-braycurtis-density-competition-environment.pdf", path = "../results/final-plots/", device = "pdf")
 ```
 
 Infusion samples definitely separate (centered in this plot), but everything else seems quite mixed.
@@ -186,8 +186,8 @@ p1 = plot_ordination(physeq.active,
                      shape = "Simple_extraction",
                     # label = "Label",
                      title="PCoA, Weighted Unifrac distance") + geom_point(size = 2.5)
-#p1 + scale_color_brewer(palette="Spectral")
-ggplotly(p1)
+p1
+
 ```
 
 Very similar pattern as Bray-Curtis but not quite as strong. I bit more mixing between G & GN water samples. Since weighted unifrac takes phylogenetic distance into account this demonstrates that the phylogenetic distance of the ASVs (and potentially functional similarity) is a bit more close for some of the water/GN samples.
@@ -199,12 +199,13 @@ finalPhyseq.ord <- ordinate(physeq.active, "PCoA", "wunifrac")
 p1 = plot_ordination(physeq.active,
                      finalPhyseq.ord,
                      type="samples",
-                     color="Competition",
-                     shape = "Density",
-                    # label = "Label",
+                     color="Density",
+                     shape = "Competition",
+                     label = "Environment",
                      title="PCoA, Weighted Unifrac distance") + geom_point(size = 2.5)
-#p1 + scale_color_brewer(palette="Spectral")
-ggplotly(p1)
+p1
+
+ggsave("pcoa-wunifrac-density-competition-environment.pdf", path = "../results/final-plots/", device = "pdf")
 ```
 
 Infusion still separates from the others but looks more phylogenetically similar to water/G samples.

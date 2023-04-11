@@ -9,7 +9,7 @@ physeq.prev <- readRDS("~/Desktop/hpcbio-git/caceres-16S-mosquito-2022Sept/resul
 
 # Composition plots (filtered data)
 
-Let's look at the taxonomic composition now that the data is filtered. 
+Let's look at the taxonomic composition now that the data is filtered.
 
 ```{r}
 #Get relative abundance
@@ -21,14 +21,34 @@ physeq.prev.prop <- physeq.prev.prop %>% tax_fix(unknowns = c(" unidentified"," 
 physeq.plot <- physeq.prev.prop
 ```
 
-Overall compositional summary (stacked bar plots) for all prevalence filtered and tip agglomerated samples.  In this example, just the top 10 ASVs are included.
+Overall compositional summary (stacked bar plots) for all prevalence filtered and tip agglomerated samples.  In this example, just the top 20 taxa are included for each taxonomical ranking. I recommend the top 20 over the top 10 simply because there is a large family that only shows up in a couple samples.
 
 ```{r, results='asis', fig.keep='all', message = FALSE, warning = FALSE, echo = FALSE}
-ranks <- c("Class", "Order", "Family", "Genus", "Species")
+ranks <- c("Phylum", "Class", "Order", "Family", "Genus", "Species")
 plots <- lapply(ranks, function (x) { 
 
+ #  #Plot relative abundance
+ #  p <- comp_barplot(physeq.plot, x, n_taxa = 20, label = "Simple_extraction", facet_by = "Env_Comp_Den", palette = dittoSeq::dittoColors())
+ #  p1 <- p + theme(legend.key.size = unit(0.25, 'cm'), #change legend key size
+ #        legend.title = element_text(size=6), #change legend title font size
+ #        legend.text = element_text(size=6),
+ #        axis.title.x=element_blank(),
+ #       # axis.text.x = element_blank(),
+ #        axis.ticks.x = element_blank(),
+ #        axis.text.x = element_text(size = 6, angle = 90, #Needed for labels
+ #                                  hjust = 1, vjust = 1,
+ #                                   face = "bold")) +
+ #        ylab("Relative Abundance") +
+ #        guides(fill = guide_legend(nrow = 30))
+ #      #  facet_grid(.~trt, scales = "free_x", space = "free_x")
+ # 
+ # p1
+ # f1 <- paste("results/final-plots/taxa-bar-plots/taxa-rank-" , x , "_barplot_top20_splitby_Env_Comp_Den_wLabels.pdf", sep = "")
+ # ggsave(f1, device = "pdf")
+ # #, width = 14, height = 8, device = "pdf"
+
+
   #Plot relative abundance
-  p <- plot_bar(physeq.plot, x="Label", fill = x)
   p <- comp_barplot(physeq.plot, x, n_taxa = 20, facet_by = "Env_Comp_Den", palette = dittoSeq::dittoColors())
   p1 <- p + theme(legend.key.size = unit(0.25, 'cm'), #change legend key size
         legend.title = element_text(size=6), #change legend title font size
@@ -36,16 +56,18 @@ plots <- lapply(ranks, function (x) {
         axis.title.x=element_blank(),
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank()) +
+      #  axis.text.x = element_text(size = 6, angle = 90, #Needed for labels
+      #                            hjust = 1, vjust = 1,
+      #                             face = "bold")) +
         ylab("Relative Abundance") +
         guides(fill = guide_legend(nrow = 30))
       #  facet_grid(.~trt, scales = "free_x", space = "free_x")
 
  p1
- f1 <- paste("../results/final-plots/taxa-rank-" , x , "_barplot_top20_splitby_Env_Comp_Den.pdf", sep = "")
+ f1 <- paste("results/final-plots/taxa-bar-plots/taxa-rank-" , x , "_barplot_top20_splitby_Env_Comp_Den.pdf", sep = "")
  ggsave(f1, device = "pdf")
  #, width = 14, height = 8, device = "pdf"
 })
-
 
 names(plots) <- ranks
 
@@ -90,3 +112,164 @@ deps <- lapply(
 )
 htmltools::attachDependencies(x = htmltools::tagList(), value = unlist(deps,recursive=FALSE))
 ```
+
+
+# Agglomerated composition plots
+
+## Grouped by Env_Comp_Den
+
+Let's try grouping the data by Env_Comp_Den (averaging the ASV counts per Env_Comp_Den group) and then re-plotting the composition bar plots. Here, the first 20 taxa are shown in each plot and the rest are categorized into the "Other" category.
+
+```{r, warning=FALSE}
+#Remove experimental water samples
+physeq.nowat <- prune_samples(sample_data(physeq.prev)$Simple_extraction != "Water", physeq.prev)
+
+#Get relative abundance
+physeq.prev1 <- merge_samples(physeq.nowat, "Env_Comp_Den")
+physeq.prev.prop <- transform_sample_counts(physeq.prev1, function(x) x/sum(x) )
+sample_data(physeq.prev.prop)$SampleSums <- sample_sums(physeq.prev1)
+physeq.plot <- physeq.prev.prop
+physeq.plot <- physeq.plot %>% tax_fix(unknowns = c(" unidentified"," uncultured", " Clostridiaceae_bacterium", " Clostridium_sp.", " uncultured_bacterium", " uncultured_prokaryote", " unidentified_eubacterium"))
+```
+
+
+
+```{r, results='asis', fig.keep='all', message = FALSE, warning = FALSE, echo = FALSE}
+ranks <- c("Phylum","Class", "Order", "Family", "Genus", "Species")
+
+#s.order <- c("Stock Water","G-Intraspecific-20","G-Intraspecific-40","G-Interspecific-20","G-Interspecific-40","GN-Intraspecific-20","GN-Intraspecific-40","GN-Interspecific-20","GN-Interspecific-40")
+s.order <- c("Stock Water","G-Intraspecific-20","G-Interspecific-20","G-Intraspecific-40","G-Interspecific-40","GN-Intraspecific-20","GN-Interspecific-20","GN-Intraspecific-40","GN-Interspecific-40")
+
+plots <- lapply(ranks, function (x) { 
+  
+#Plot relative abundance
+  p <- comp_barplot(physeq.plot, x, n_taxa = 20, palette = dittoSeq::dittoColors(), sample_order = s.order)
+  p1 <- p + theme(legend.key.size = unit(0.25, 'cm'), #change legend key size
+        legend.title = element_text(size=8, face = "bold"), #change legend title font size
+        legend.text = element_text(size=8),
+        axis.title.x=element_blank(),
+        axis.title.y=element_text(size = 10),
+        axis.text.x = element_text(size = 8, angle = 45, 
+                                   hjust = 1, vjust = 1,
+                                   face = "bold")) +
+        ylab("Relative Abundance") +
+        guides(fill = guide_legend(nrow = 30))
+      #  facet_grid(.~trt, scales = "free_x", space = "free_x")
+
+ p1
+ f1 <- paste("results/final-plots/taxa-bar-plots/taxa-rank-" , x , "_barplot_top20_groupedby_Env_Comp_Den_NO-EXP-WAT.pdf", sep = "")
+ ggsave(f1, device = "pdf")
+})
+
+names(plots) <- ranks
+# Build list of outputs
+# See https://stackoverflow.com/questions/9469504/access-and-preserve-list-names-in-lapply-function for example
+# not sure if there is an easy way to make a function out of these.
+output <- list()
+for(rank in ranks){
+  # Header for iteration, note Rmd heading ranks and adjust accordingly
+  output[[length(output) + 1L]] <- paste0("### ", rank)
+  # Plot
+  output[[length(output) + 1L]] <- plots[[rank]]
+}
+# Render the outputs
+for(j in 1:length(output)){
+  x <- output[[j]]
+  if(inherits(x, "character")){
+    cat("\n")
+    cat(x)
+  } else if(inherits(x, "knitr_kable")){
+    cat("\n")
+    print(x)
+  }
+  else {
+    # print the html piece of the htmlwidgets
+    cat("\n")
+    cat(htmltools::renderTags(as_widget(x))$html)
+  }
+}
+```
+
+
+```{r echo=FALSE, messages=FALSE, warning=FALSE}
+# Attach the Dependencies since they do not get included with renderTags(...)$html
+deps <- lapply(
+  Filter(f = function(x){inherits(x,"htmlwidget")}, x = output),
+  function(hw){
+    htmltools::renderTags(hw)$dependencies
+  }
+)
+htmltools::attachDependencies(x = htmltools::tagList(), value = unlist(deps,recursive=FALSE))
+```
+
+
+
+<!-- ## Grouped by Extr_Env & Split by Density -->
+
+<!-- Since Intra- versus Interspecific doesn't seem to be as interesting, let's try grouping the data by Extr_Env and then re-plotting the composition bar plots and splitting the bar plots by Density. Here, the first 20 taxa are shown in each plot and the rest are categorized into the "Other" category. -->
+
+<!-- ```{r, warning=FALSE} -->
+<!-- #Get relative abundance -->
+<!-- physeq.prev1 <- merge_samples(physeq.prev, "Extr_Env") -->
+<!-- physeq.prev.prop <- transform_sample_counts(physeq.prev1, function(x) x/sum(x) ) -->
+<!-- sample_data(physeq.prev.prop)$SampleSums <- sample_sums(physeq.prev1) -->
+<!-- physeq.plot <- physeq.prev.prop -->
+<!-- physeq.plot <- physeq.plot %>% tax_fix(unknowns = c(" unidentified"," uncultured", " Clostridiaceae_bacterium", " Clostridium_sp.", " uncultured_bacterium", " uncultured_prokaryote", " unidentified_eubacterium")) -->
+<!-- ``` -->
+
+
+
+<!-- ```{r, results='asis', fig.keep='all', message = FALSE, warning = FALSE, echo = FALSE} -->
+<!-- ranks <- c("Phylum","Class", "Order", "Family", "Genus", "Species") -->
+
+<!-- s.order <- c("W_G","W_GN","ML_G","ML_GN") -->
+
+<!-- plots <- lapply(ranks, function (x) {  -->
+
+<!-- #Plot relative abundance -->
+<!--   p <- comp_barplot(physeq.plot, x, n_taxa = 20, palette = dittoSeq::dittoColors(), sample_order = s.order) -->
+<!--   p1 <- p + theme(legend.key.size = unit(0.25, 'cm'), #change legend key size -->
+<!--         legend.title = element_text(size=8, face = "bold"), #change legend title font size -->
+<!--         legend.text = element_text(size=8), -->
+<!--         axis.title.x=element_blank(), -->
+<!--         axis.title.y=element_text(size = 10), -->
+<!--         axis.text.x = element_text(size = 8,  -->
+<!--                                    hjust = 1, vjust = 1, -->
+<!--                                    face = "bold")) + -->
+<!--         ylab("Relative Abundance") + -->
+<!--         guides(fill = guide_legend(nrow = 30)) -->
+<!--       #  facet_grid(.~trt, scales = "free_x", space = "free_x") -->
+
+<!--  p1 -->
+<!--  f1 <- paste("../results/final-plots/taxa-rank-" , x , "_barplot_top20_groupedby_Extr_Env_splitby_Density.pdf", sep = "") -->
+<!--  ggsave(f1, device = "pdf") -->
+<!-- }) -->
+
+<!-- names(plots) <- ranks -->
+<!-- # Build list of outputs -->
+<!-- # See https://stackoverflow.com/questions/9469504/access-and-preserve-list-names-in-lapply-function for example -->
+<!-- # not sure if there is an easy way to make a function out of these. -->
+<!-- output <- list() -->
+<!-- for(rank in ranks){ -->
+<!--   # Header for iteration, note Rmd heading ranks and adjust accordingly -->
+<!--   output[[length(output) + 1L]] <- paste0("### ", rank) -->
+<!--   # Plot -->
+<!--   output[[length(output) + 1L]] <- plots[[rank]] -->
+<!-- } -->
+<!-- # Render the outputs -->
+<!-- for(j in 1:length(output)){ -->
+<!--   x <- output[[j]] -->
+<!--   if(inherits(x, "character")){ -->
+<!--     cat("\n") -->
+<!--     cat(x) -->
+<!--   } else if(inherits(x, "knitr_kable")){ -->
+<!--     cat("\n") -->
+<!--     print(x) -->
+<!--   } -->
+<!--   else { -->
+<!--     # print the html piece of the htmlwidgets -->
+<!--     cat("\n") -->
+<!--     cat(htmltools::renderTags(as_widget(x))$html) -->
+<!--   } -->
+<!-- } -->
+<!-- ``` -->

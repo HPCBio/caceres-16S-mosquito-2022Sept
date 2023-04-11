@@ -67,55 +67,23 @@ p
 This still separates by water vs larvae, but it no longer separates as nicely by environment, so I would not recommend using the above plot.
 
 
-## Normalization & PCoA plots
+## Normalization & PCoA (mosquito & stock water)
 
 Transform data to relative proportions (no prior added).  While not as sophisticated as other normalization methods it is currently the best method for normalizing library sizes while still maintaining community structure patterns. See [McKnight et al., 2018](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.13115) for more information.
 
 ```{r }
-#All samples
-physeq.prop <- transform_sample_counts(physeq.prev, function(x) x/sum(x) )
-sample_data(physeq.prop)$SampleSums <- sample_sums(physeq.prev)
-```
+#Remove experimental water samples
+physeq.nowat <- prune_samples(sample_data(physeq.prev)$Simple_extraction != "Water", physeq.prev)
 
-<!-- ## CLR normalization, McMurdie -->
-
-<!-- Transform data using CLR (from McMurdie (Meth Mol Bio 2018) supplemental package).   -->
-
-```{r }
-# # copy instance and replace raw counts with CLR-normalized counts
-# physeq.clr <- phyloseq_CLR(physeq.prev)
-# # otu_table(physeq.clr) <- otu_table(as(x, "matrix"), taxa_are_rows = FALSE)
-# physeq.clr
-# 
-# mucosa.clr <- phyloseq_CLR(mucosa.prev)
-# digesta.clr <- phyloseq_CLR(digesta.prev)
-```
-
-<!-- ## CLR normalization, mixOmics -->
-
-<!-- CLR from `mixOmics`. -->
-
-```{r }
-# # get counts
-# tmp <- as(otu_table(mucosa.prev),"matrix")
-# 
-# tmp <- tmp
-# 
-# # transpose if needed
-# if(!taxa_are_rows(mucosa.prev)) { tmp <- t(tmp)}
-# 
-# x <- logratio.transfo(tmp, logratio = 'CLR', offset = 1)
-# 
-# # copy instance and replace raw counts with CLR-normalized counts
-# mucosa.clr2 <- mucosa.prev
-# otu_table(mucosa.clr2) <- otu_table(as(x, "matrix"), taxa_are_rows = TRUE)
-# mucosa.clr2
+#Normalize
+physeq.prop.nowat <- transform_sample_counts(physeq.nowat, function(x) x/sum(x) )
+sample_data(physeq.prop.nowat)$SampleSums <- sample_sums(physeq.nowat)
 ```
 
 Set the active normalization type (proportion for now)
 
 ```{r}
-physeq.active <- physeq.prop
+physeq.active <- physeq.prop.nowat
 ```
 
 ### Bray Curtis metric
@@ -151,7 +119,119 @@ p1 = plot_ordination(physeq.active,
                      label = "Environment",
                      title="PCoA, Bray Curtis distance") + geom_point(size = 2.5)
 p1
-ggsave("pcoa-braycurtis-density-competition-environment.pdf", path = "../results/final-plots/", device = "pdf")
+ggsave("pcoa-braycurtis-density-competition-environment_Mosquito.pdf", path = "./results/final-plots/", device = "pdf")
+```
+
+One could argue that Density 40 are slighty more skewed towards the right and Density 20 to the left.
+
+
+Check to see if number of sequences per sample (input) affects diversity
+
+```{r }
+p1 <- plot_ordination(physeq.active,
+                     finalPhyseq.ord,
+                     type="samples",
+                     color="input",
+                     label="Label",
+                     title="Samples") + geom_point(size = 2.5) +
+  ggtitle("PCoA, Bray Curtis distance") 
+ggplotly(p1)
+```
+
+Nothing odd related to number of input sequences.
+
+
+### Weighted UniFrac metric
+
+Let's look at Weighted UniFrac now.
+
+```{r}
+finalPhyseq.ord <- ordinate(physeq.active, "PCoA", "wunifrac")
+p1 = plot_ordination(physeq.active,
+                     finalPhyseq.ord,
+                     type="samples",
+                     color="Environment",
+                     shape = "Simple_extraction",
+                    # label = "Label",
+                     title="PCoA, Weighted Unifrac distance") + geom_point(size = 2.5)
+p1
+
+```
+
+Very similar pattern as Bray-Curtis but not quite as strong. I bit more mixing between G & GN samples. Since weighted unifrac takes phylogenetic distance into account this demonstrates that the phylogenetic distance of the ASVs (and potentially functional similarity) is a bit more close for some of the G/GN samples. There also appear to be 3 outlier mosquito larvae that are different from the main group, but this is based on phylogeny because this pattern isn't seen in Bray Curtis.
+
+Let's also highlight the other metadata of interest:
+
+```{r}
+finalPhyseq.ord <- ordinate(physeq.active, "PCoA", "wunifrac")
+p1 = plot_ordination(physeq.active,
+                     finalPhyseq.ord,
+                     type="samples",
+                     color="Density",
+                     shape = "Competition",
+                     label = "Environment",
+                     title="PCoA, Weighted Unifrac distance") + geom_point(size = 2.5)
+p1
+
+ggsave("pcoa-wunifrac-density-competition-environment_Mosquito.pdf", path = "./results/final-plots/", device = "pdf")
+```
+
+Again, one could argue that Density splits somewhat, but pretty well mixed.
+
+
+
+## PCoA (experimental water & stock water) 
+
+I will just look at experimental water and stock water now.
+
+```{r }
+#Remove experimental water samples
+physeq.wat <- prune_samples(sample_data(physeq.prev)$Simple_extraction != "Mosquito Larvae", physeq.prev)
+
+#Normalize
+physeq.prop.wat <- transform_sample_counts(physeq.wat, function(x) x/sum(x) )
+sample_data(physeq.prop.wat)$SampleSums <- sample_sums(physeq.wat)
+```
+
+
+```{r}
+physeq.active <- physeq.prop.wat
+```
+
+### Bray Curtis metric
+
+```{r }
+set.seed(1234)
+
+finalPhyseq.ord <- ordinate(physeq.active, "PCoA", "bray")
+p1 = plot_ordination(physeq.active,
+                     finalPhyseq.ord,
+                     type="samples",
+                     color="Environment",
+                     shape = "Simple_extraction",
+                     title="Samples") + geom_point(size = 2.5)
+p1 + ggtitle("PCoA, Bray Curtis distance")
+#ggplotly(p1 + ggtitle("PCoA, Bray Curtis distance"))
+#+  scale_fill_viridis_d()
+```
+
+Very clearly splitting by Environment and extraction type. Clustering isn't as tight as it was for larvae (not too surprising).
+
+Let's try highlighting Density and Competition...
+
+```{r }
+set.seed(1234)
+
+finalPhyseq.ord <- ordinate(physeq.active, "PCoA", "bray")
+p1 = plot_ordination(physeq.active,
+                     finalPhyseq.ord,
+                     type="samples",
+                     color="Density",
+                     shape = "Competition",
+                     label = "Environment",
+                     title="PCoA, Bray Curtis distance") + geom_point(size = 2.5)
+p1
+ggsave("pcoa-braycurtis-density-competition-environment_ExpWater.pdf", path = "./results/final-plots/", device = "pdf")
 ```
 
 Infusion samples definitely separate (centered in this plot), but everything else seems quite mixed.
@@ -190,7 +270,7 @@ p1
 
 ```
 
-Very similar pattern as Bray-Curtis but not quite as strong. I bit more mixing between G & GN water samples. Since weighted unifrac takes phylogenetic distance into account this demonstrates that the phylogenetic distance of the ASVs (and potentially functional similarity) is a bit more close for some of the water/GN samples.
+Very similar pattern as Bray-Curtis. 
 
 Let's also highlight the other metadata of interest:
 
@@ -205,17 +285,19 @@ p1 = plot_ordination(physeq.active,
                      title="PCoA, Weighted Unifrac distance") + geom_point(size = 2.5)
 p1
 
-ggsave("pcoa-wunifrac-density-competition-environment.pdf", path = "../results/final-plots/", device = "pdf")
+ggsave("pcoa-wunifrac-density-competition-environment_ExpWater.pdf", path = "./results/final-plots/", device = "pdf")
 ```
 
-Infusion still separates from the others but looks more phylogenetically similar to water/G samples.
+Infusion still separates from the others. Everything else quite mixed.
+
+
 
 
 ## PERMANOVA
 
 Let's try PERMANOVA on this using the implementation in `vegan` (`adonis2`). This is the most popular and powerful test  recommended for microbial studies. P-value indicates whether the diversity between different communities is statistically significant. R^2 indicates how much of the total variance can be explained by grouping factor.
 
-NOTE, Infusion stock samples have been removed for the PERMANOVA analyses.
+NOTE, these initial tests include both experimental water and mosquito larvae. Infusion stock samples have been removed for the PERMANOVA analyses.
 
 ### Bray-Curtis 
 
@@ -223,6 +305,12 @@ Results below are for the Bray-Curtis metric, but I also post results of Weighte
 
 ```{r }
 # Remove infusion samples
+#Normalize
+physeq.prop <- transform_sample_counts(physeq.prev, function(x) x/sum(x) )
+sample_data(physeq.prop)$SampleSums <- sample_sums(physeq.prev)
+
+physeq.active <- physeq.prop
+
 physeq.active <- prune_samples(sample_data(physeq.active)$Density != "Stock Water", physeq.active)
 
 finalPhyseq.meta <- as(sample_data(physeq.active), "data.frame")
@@ -394,7 +482,7 @@ plot(beta, main = "beta dispersion estimates between days")
 
 ### Test larvae only (using Weighted Unifrac)
 
-Here I wanted to test larvae only to see if that would make the data more balanced and remove heterscedasticity.
+Here I test larvae only to see if that would make the data more balanced and remove heterscedasticity.
 
 ```{r}
 physeq.lar <- prune_samples(sample_data(physeq.active)$Simple_extraction == "Mosquito Larvae", physeq.active)
@@ -426,6 +514,54 @@ adonis2(finalPhyseq.prop.dist.bc ~ Environment * Competition * Density * Plate,
 ```
 
 Adding Plate increases significance for all 4, and increases R2 to ~59%. 
+
+Heteroscedasticity
+
+```{r}
+beta <- betadisper(finalPhyseq.prop.dist.bc, finalPhyseq.meta$Env_Comp_Den)
+permutest(beta)
+```
+
+Env_Comp_Den is not heteroscedastic.
+
+Let's visualize
+
+```{r}
+plot(beta, main = "beta dispersion estimates between days")
+```
+
+
+
+### Test larvae only (using Bray Curtis)
+
+Here I wanted to test larvae only to see if that would make the data more balanced and remove heterscedasticity.
+
+
+```{r }
+finalPhyseq.meta <- as(sample_data(physeq.lar), "data.frame")
+finalPhyseq.prop.dist.bc <- phyloseq::distance(physeq.lar, method = "bray")
+```
+
+
+Environment x Competition x Density
+
+```{r}
+set.seed(12345)
+adonis2(finalPhyseq.prop.dist.bc ~ Environment * Competition * Density,
+       data = finalPhyseq.meta)
+```
+
+All 3 are significant and this does increase R2 is around 55%
+
+Environment x Competition x Density x Plate
+
+```{r}
+set.seed(12345)
+adonis2(finalPhyseq.prop.dist.bc ~ Environment * Competition * Density * Plate,
+       data = finalPhyseq.meta)
+```
+
+Adding Plate increases significance for all 4, and increases R2 to ~60%. 
 
 Heteroscedasticity
 

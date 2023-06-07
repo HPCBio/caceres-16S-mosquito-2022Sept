@@ -7,7 +7,7 @@ source("~/Desktop/hpcbio-git/caceres-16S-mosquito-2022Sept/src/common_code.R", l
 
 ```{r}
 # Load in data
-physeq <- readRDS('results/physeq.raw.RDS')
+physeq <- readRDS('../results/physeq.raw.RDS')
 physeq.filtered <- physeq
 ```
 
@@ -64,7 +64,7 @@ physeq.filtered
 If needed, save these as a separate input for the next steps.
 
 ```{r}
-#saveRDS(physeq.filtered, 'results/physeq.raw.males.RDS')
+#saveRDS(physeq.filtered, '../results/physeq.raw.males.RDS')
 ```
 
 ## Removing artifacts
@@ -317,5 +317,5 @@ plot_tree(ex0, label.tips = 'Family',
 We can see that the 50 most abundant ASVs are dominant in water samples, and seeing a lot of Arcobacteraceae family in all extraction types.
 
 ```{r}
-saveRDS(physeq.filtered, 'results/physeq.filtered.RDS')
+saveRDS(physeq.filtered, '../results/physeq.filtered.RDS')
 ```

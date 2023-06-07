@@ -4,7 +4,11 @@ source("~/Desktop/hpcbio-git/caceres-16S-mosquito-2022Sept/src/common_code.R", l
 ```
 
 ```{r}
-physeq.filtered <- readRDS('results/physeq.filtered.RDS')
+physeq.filtered <- readRDS('../results/physeq.filtered.RDS')
+```
+
+```{r}
+getwd()
 ```
 
 # Alpha diversity
@@ -82,7 +86,7 @@ p + geom_boxplot(aes(x=Env_Comp_Den,
   #scale_x_discrete(labels=labels) + 
   #theme(legend.position = "none")
 
-ggsave("alpha-allMetrics-byEnv_Comp_Den_LarvaeOnly.pdf", path = "./results/final-plots", device = "pdf", width = 8, height = 5.5, units = "in")
+ggsave("alpha-allMetrics-byEnv_Comp_Den_LarvaeOnly.pdf", path = "../results/final-plots", device = "pdf", width = 8, height = 5.5, units = "in")
 ```
 
 In the metrics that consider abundance and richness (Shannon, Simpson, InvSimpson), all groups are significant. This essentially means that the alpha diversity values of one of these groups compared to the mean or any other group were significantly different. Technically the other metrics had a normal distribution and would be better suited for an ANOVA test. This can be added later.
@@ -108,7 +112,7 @@ p + geom_boxplot(aes(x=Density,
   #scale_x_discrete(labels=labels) + 
   #theme(legend.position = "none")
 
-ggsave("alpha-allMetrics-byDensity_LarvaeOnly.pdf", path = "./results/final-plots", device = "pdf", width = 7, height = 5.5, units = "in")
+ggsave("alpha-allMetrics-byDensity_LarvaeOnly.pdf", path = "../results/final-plots", device = "pdf", width = 7, height = 5.5, units = "in")
 ```
 
 ```{r}

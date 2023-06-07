@@ -3,7 +3,7 @@ source("~/Desktop/hpcbio-git/caceres-16S-mosquito-2022Sept/src/common_code.R", l
 ```
 
 ```{r}
-physeq.prev <- readRDS('results/phyloseq.prevfiltered.RDS')
+physeq.prev <- readRDS('../results/phyloseq.prevfiltered.RDS')
 ```
 
 # Beta diversity
@@ -119,7 +119,7 @@ p1 = plot_ordination(physeq.active,
                      label = "Environment",
                      title="PCoA, Bray Curtis distance") + geom_point(size = 2.5)
 p1
-ggsave("pcoa-braycurtis-density-competition-environment_Mosquito.pdf", path = "./results/final-plots/", device = "pdf")
+ggsave("pcoa-braycurtis-density-competition-environment_Mosquito.pdf", path = "../results/final-plots/", device = "pdf")
 ```
 
 One could argue that Density 40 are slighty more skewed towards the right and Density 20 to the left.
@@ -173,7 +173,7 @@ p1 = plot_ordination(physeq.active,
                      title="PCoA, Weighted Unifrac distance") + geom_point(size = 2.5)
 p1
 
-ggsave("pcoa-wunifrac-density-competition-environment_Mosquito.pdf", path = "./results/final-plots/", device = "pdf")
+ggsave("pcoa-wunifrac-density-competition-environment_Mosquito.pdf", path = "../results/final-plots/", device = "pdf")
 ```
 
 Again, one could argue that Density splits somewhat, but pretty well mixed.
@@ -231,7 +231,7 @@ p1 = plot_ordination(physeq.active,
                      label = "Environment",
                      title="PCoA, Bray Curtis distance") + geom_point(size = 2.5)
 p1
-ggsave("pcoa-braycurtis-density-competition-environment_ExpWater.pdf", path = "./results/final-plots/", device = "pdf")
+ggsave("pcoa-braycurtis-density-competition-environment_ExpWater.pdf", path = "../results/final-plots/", device = "pdf")
 ```
 
 Infusion samples definitely separate (centered in this plot), but everything else seems quite mixed.
@@ -285,7 +285,7 @@ p1 = plot_ordination(physeq.active,
                      title="PCoA, Weighted Unifrac distance") + geom_point(size = 2.5)
 p1
 
-ggsave("pcoa-wunifrac-density-competition-environment_ExpWater.pdf", path = "./results/final-plots/", device = "pdf")
+ggsave("pcoa-wunifrac-density-competition-environment_ExpWater.pdf", path = "../results/final-plots/", device = "pdf")
 ```
 
 Infusion still separates from the others. Everything else quite mixed.

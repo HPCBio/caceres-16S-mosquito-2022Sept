@@ -6,7 +6,7 @@ source("~/Desktop/hpcbio-git/caceres-16S-mosquito-2022Sept/src/common_code.R", l
 ```
 
 ```{r}
-physeq.filtered <- readRDS('results/physeq.filtered.RDS')
+physeq.filtered <- readRDS('../results/physeq.filtered.RDS')
 ```
 
 Let's check whether we're adequately capturing diversity.  This is a simple alpha rarefaction curve; here we want to see the number of taxa plateau as the counts increase.
@@ -31,7 +31,7 @@ Promising differences in the amount of alpha diversity between extraction types.
 p <- p + facet_wrap(~Density) + ggtitle("Alpha Rarefaction by Density")  # theme(legend.position = c(0.8, 0.2))
 
 ggplotly(p)
-#ggsave("alpha-rarefaction-byTreatment-separatedbyTreatment.pdf", path = "./results/final-plots", device = pdf, width = 7.5, height = 5, units = "in")
+#ggsave("alpha-rarefaction-byTreatment-separatedbyTreatment.pdf", path = "../results/final-plots", device = pdf, width = 7.5, height = 5, units = "in")
 ```
 
 Interesting that richness diverges for larvae versus water more in the Density 20 group.

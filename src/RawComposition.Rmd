@@ -4,7 +4,7 @@ source("~/Desktop/hpcbio-git/caceres-16S-mosquito-2022Sept/src/common_code.R", l
 ```
 
 ```{r}
-physeq <- readRDS('results/physeq.raw.RDS')
+physeq <- readRDS('../results/physeq.raw.RDS')
 ```
 
 # Composition plots (unfiltered data)

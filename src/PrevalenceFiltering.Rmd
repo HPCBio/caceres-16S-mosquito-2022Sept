@@ -3,7 +3,7 @@ source("~/Desktop/hpcbio-git/caceres-16S-mosquito-2022Sept/src/common_code.R", l
 ```
 
 ```{r}
-physeq.filtered <- readRDS('results/physeq.filtered.RDS')
+physeq.filtered <- readRDS('../results/physeq.filtered.RDS')
 ```
 
 # Prevalence filtering
@@ -385,7 +385,7 @@ A steep increase in unassigned ranks from Genus to Family. Let's try Genus to st
 
 
 ```{r PrevalenceFiltering-35 }
-saveRDS(physeq.glom, file = "./results/phyloseq.prevfiltered.RDS")
+saveRDS(physeq.glom, file = "../results/phyloseq.prevfiltered.RDS")
 ```
 
 

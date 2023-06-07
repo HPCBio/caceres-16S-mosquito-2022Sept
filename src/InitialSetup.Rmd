@@ -32,7 +32,7 @@ Load in experimental data on samples (metadata).  Here are the first few rows:
 
 ```{r, show_col_types = FALSE}
 library(readxl)
-tmp <- read_tsv('Metadata/Metadata.txt')
+tmp <- read_tsv('../Metadata/Metadata.txt')
 tmp$Extraction_type <- factor(tmp$Extraction_type, levels = unique(tmp$Extraction_type))
 tmp$Simple_extraction <- factor(tmp$Simple_extraction, levels = unique(tmp$Simple_extraction))
 tmp$Environment <- factor(tmp$Environment, levels = unique(tmp$Environment))
@@ -49,7 +49,7 @@ knitr::kable(head(tmp), show_col_types = FALSE)
 We also read in QC so we can layer in whether read abundance plays a role.  We need to do a bit of our own read tracking here (it's not currently in the pipeline but can be added).
 
 ```{r results="asis", show_col_types = FALSE}
-track <- read_tsv("2022-Sept-16S/Plain/QC/all.readtracking.merged.txt")
+track <- read_tsv("../2022-Sept-16S/Plain/QC/all.readtracking.merged.txt")
 knitr::kable(track, show_col_types = FALSE)
 ```
 
@@ -68,9 +68,9 @@ Now we can load in the taxonomic analyses. I tried dada2's and QIIME2' taxonomic
 DADA2: Proportion of ASVs that are unassigned at each rank
 
 ```{r}
-taxtab.d <- readRDS('2022-Sept-16S/Phyloseq/tax_final.simple.RDS')
+taxtab.d <- readRDS('../2022-Sept-16S/Phyloseq/tax_final.simple.RDS')
 library(qiime2R)
-taxtab.q <- read_qza('2022-Sept-16S/Q2taxa/taxonomy.q2-classifier.qza')
+taxtab.q <- read_qza('../2022-Sept-16S/Q2taxa/taxonomy.q2-classifier.qza')
 
 # this is needed for some downstream steps
 taxtab.d[taxtab.d == 'Unclassified'] <- NA
@@ -107,7 +107,7 @@ Here is a summary of the initial phyloseq object using QIIME2 taxonomy assignmen
 
 ```{r}
 colnames(taxtab.q) <- c("Domain", "Phylum", "Class", "Order", "Family", "Genus", "Species")
-seqtab.tmp <- readRDS('2022-Sept-16S/Phyloseq/seqtab_final.simple.RDS')
+seqtab.tmp <- readRDS('../2022-Sept-16S/Phyloseq/seqtab_final.simple.RDS')
 
 # Remove file ending from rownames
 rownames(seqtab.tmp) <- gsub(".R1.filtered.fastq.gz","", rownames(seqtab.tmp))
@@ -115,8 +115,8 @@ rownames(seqtab.tmp) <- gsub(".R1.filtered.fastq.gz","", rownames(seqtab.tmp))
 tmp.m <- match(tmp2$SampleID, rownames(seqtab.tmp))
 seqtab.tmp <- seqtab.tmp[tmp.m,]
 
-tree.tmp <- read_tree('2022-Sept-16S/Plain/Trees/rooted.newick')
-asvs.tmp <- Biostrings::readDNAStringSet('2022-Sept-16S/Plain/Sequences/asvs.md5.nochim.fna', format = 'fasta')
+tree.tmp <- read_tree('../2022-Sept-16S/Plain/Trees/rooted.newick')
+asvs.tmp <- Biostrings::readDNAStringSet('../2022-Sept-16S/Plain/Sequences/asvs.md5.nochim.fna', format = 'fasta')
 
 physeq <- phyloseq(
   otu_table(seqtab.tmp, taxa_are_rows = F),
@@ -146,5 +146,5 @@ sample_data(physeq) %>% as("data.frame") %>% head %>% knitr::kable()
 ## Save file
 
 ```{r}
-saveRDS(physeq, 'results/physeq.raw.RDS')
+saveRDS(physeq, '../results/physeq.raw.RDS')
 ```

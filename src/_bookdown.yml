@@ -5,4 +5,8 @@ rmd_files:
   html: ["index.Rmd", "InitialSetup.Rmd", "RawComposition.Rmd", "Filtering.Rmd", 
   "AlphaRarefaction.Rmd", "AlphaDiversity.Rmd", "PrevalenceFiltering.Rmd", "PrevFilteredAgglomComposition.Rmd",
   "BetaDiversity.Rmd", "DiffAbundance.Rmd", "SessionInfo.Rmd"]
-delete_merged_file: TRUE
+
+delete_merged_file: true
+language:
+  ui:
+    chapter_name: "Chapter "

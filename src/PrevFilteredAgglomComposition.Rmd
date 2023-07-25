@@ -204,72 +204,88 @@ htmltools::attachDependencies(x = htmltools::tagList(), value = unlist(deps,recu
 
 
 
-<!-- ## Grouped by Extr_Env & Split by Density -->
+## Grouped by Env_Comp_Den (paneled by simple_extraction)
 
-<!-- Since Intra- versus Interspecific doesn't seem to be as interesting, let's try grouping the data by Extr_Env and then re-plotting the composition bar plots and splitting the bar plots by Density. Here, the first 20 taxa are shown in each plot and the rest are categorized into the "Other" category. -->
+Let's try grouping the data by Env_Comp_Den (averaging the ASV counts per Env_Comp_Den group) and then re-plotting the composition bar plots. Here, the first 20 taxa are shown in each plot and the rest are categorized into the "Other" category.
 
-<!-- ```{r, warning=FALSE} -->
-<!-- #Get relative abundance -->
-<!-- physeq.prev1 <- merge_samples(physeq.prev, "Extr_Env") -->
-<!-- physeq.prev.prop <- transform_sample_counts(physeq.prev1, function(x) x/sum(x) ) -->
-<!-- sample_data(physeq.prev.prop)$SampleSums <- sample_sums(physeq.prev1) -->
-<!-- physeq.plot <- physeq.prev.prop -->
-<!-- physeq.plot <- physeq.plot %>% tax_fix(unknowns = c(" unidentified"," uncultured", " Clostridiaceae_bacterium", " Clostridium_sp.", " uncultured_bacterium", " uncultured_prokaryote", " unidentified_eubacterium")) -->
-<!-- ``` -->
+```{r, warning=FALSE}
+
+#Get relative abundance
+physeq.prev1 <- merge_samples(physeq.prev, "Extr_Env_Comp_Den")
+physeq.prev.prop <- transform_sample_counts(physeq.prev1, function(x) x/sum(x) )
+sample_data(physeq.prev.prop)$SampleSums <- sample_sums(physeq.prev1)
+
+physeq.plot <- physeq.prev.prop #physeq.prop #
+physeq.plot <- physeq.plot %>% tax_fix(unknowns = c(" unidentified"," uncultured", " Clostridiaceae_bacterium", " Clostridium_sp.", " uncultured_bacterium", " uncultured_prokaryote", " unidentified_eubacterium"))
+```
 
 
 
-<!-- ```{r, results='asis', fig.keep='all', message = FALSE, warning = FALSE, echo = FALSE} -->
-<!-- ranks <- c("Phylum","Class", "Order", "Family", "Genus", "Species") -->
+```{r, results='asis', fig.keep='all', message = FALSE, warning = FALSE, echo = FALSE}
+ranks <- c("Phylum","Class", "Order", "Family", "Genus", "Species")
 
-<!-- s.order <- c("W_G","W_GN","ML_G","ML_GN") -->
+# s.order <- c("Stock Water","G-Intraspecific-20","G-Interspecific-20","G-Intraspecific-40","G-Interspecific-40","GN-Intraspecific-20","GN-Interspecific-20","GN-Intraspecific-40","GN-Interspecific-40")
+s.order <- c("I.G.STOCK", "I.GN.STOCK","I.G.M.20","I.G.MS.20","I.G.M.40","I.G.MS.40","I.GN.M.20","I.GN.MS.20","I.GN.M.40","I.GN.MS.40", "L.G.M.20","L.G.MS.20","L.G.M.40","L.G.MS.40","L.GN.M.20","L.GN.MS.20","L.GN.M.40","L.GN.MS.40")
 
-<!-- plots <- lapply(ranks, function (x) {  -->
+plots <- lapply(ranks, function (x) { 
+  
+#Plot relative abundance
+  # 
+  p <- comp_barplot(physeq.plot, x, n_taxa = 20, palette = dittoSeq::dittoColors(),sample_order = s.order, facet_by = "Simple_extraction")
+  p1 <- p + theme(legend.key.size = unit(0.25, 'cm'), #change legend key size
+        legend.title = element_text(size=8, face = "bold"), #change legend title font size
+        legend.text = element_text(size=8),
+        axis.title.x=element_blank(),
+        axis.title.y=element_text(size = 10),
+        axis.text.x = element_text(size = 6, angle = 45, 
+                                   hjust = 1, vjust = 1,
+                                   face = "bold")) +
+        ylab("Relative Abundance") +
+        guides(fill = guide_legend(nrow = 30))
+      #  facet_grid(.~Simple_extraction, scales = "free_x", space = "free_x")
 
-<!-- #Plot relative abundance -->
-<!--   p <- comp_barplot(physeq.plot, x, n_taxa = 20, palette = dittoSeq::dittoColors(), sample_order = s.order) -->
-<!--   p1 <- p + theme(legend.key.size = unit(0.25, 'cm'), #change legend key size -->
-<!--         legend.title = element_text(size=8, face = "bold"), #change legend title font size -->
-<!--         legend.text = element_text(size=8), -->
-<!--         axis.title.x=element_blank(), -->
-<!--         axis.title.y=element_text(size = 10), -->
-<!--         axis.text.x = element_text(size = 8,  -->
-<!--                                    hjust = 1, vjust = 1, -->
-<!--                                    face = "bold")) + -->
-<!--         ylab("Relative Abundance") + -->
-<!--         guides(fill = guide_legend(nrow = 30)) -->
-<!--       #  facet_grid(.~trt, scales = "free_x", space = "free_x") -->
+ p1
+ f1 <- paste("../results/final-plots/taxa-bar-plots/taxa-rank-" , x , "_barplot_top20_groupedby_Env_Comp_Den_faceted.pdf", sep = "")
+ ggsave(f1, device = "pdf", units = "in", width = 6, height = 5)
+})
 
-<!--  p1 -->
-<!--  f1 <- paste("../results/final-plots/taxa-rank-" , x , "_barplot_top20_groupedby_Extr_Env_splitby_Density.pdf", sep = "") -->
-<!--  ggsave(f1, device = "pdf") -->
-<!-- }) -->
+names(plots) <- ranks
+# Build list of outputs
+# See https://stackoverflow.com/questions/9469504/access-and-preserve-list-names-in-lapply-function for example
+# not sure if there is an easy way to make a function out of these.
+output <- list()
+for(rank in ranks){
+  # Header for iteration, note Rmd heading ranks and adjust accordingly
+  output[[length(output) + 1L]] <- paste0("### ", rank)
+  # Plot
+  output[[length(output) + 1L]] <- plots[[rank]]
+}
+# Render the outputs
+for(j in 1:length(output)){
+  x <- output[[j]]
+  if(inherits(x, "character")){
+    cat("\n")
+    cat(x)
+  } else if(inherits(x, "knitr_kable")){
+    cat("\n")
+    print(x)
+  }
+  else {
+    # print the html piece of the htmlwidgets
+    cat("\n")
+    cat(htmltools::renderTags(as_widget(x))$html)
+  }
+}
+```
 
-<!-- names(plots) <- ranks -->
-<!-- # Build list of outputs -->
-<!-- # See https://stackoverflow.com/questions/9469504/access-and-preserve-list-names-in-lapply-function for example -->
-<!-- # not sure if there is an easy way to make a function out of these. -->
-<!-- output <- list() -->
-<!-- for(rank in ranks){ -->
-<!--   # Header for iteration, note Rmd heading ranks and adjust accordingly -->
-<!--   output[[length(output) + 1L]] <- paste0("### ", rank) -->
-<!--   # Plot -->
-<!--   output[[length(output) + 1L]] <- plots[[rank]] -->
-<!-- } -->
-<!-- # Render the outputs -->
-<!-- for(j in 1:length(output)){ -->
-<!--   x <- output[[j]] -->
-<!--   if(inherits(x, "character")){ -->
-<!--     cat("\n") -->
-<!--     cat(x) -->
-<!--   } else if(inherits(x, "knitr_kable")){ -->
-<!--     cat("\n") -->
-<!--     print(x) -->
-<!--   } -->
-<!--   else { -->
-<!--     # print the html piece of the htmlwidgets -->
-<!--     cat("\n") -->
-<!--     cat(htmltools::renderTags(as_widget(x))$html) -->
-<!--   } -->
-<!-- } -->
-<!-- ``` -->
+
+```{r echo=FALSE, messages=FALSE, warning=FALSE}
+# Attach the Dependencies since they do not get included with renderTags(...)$html
+deps <- lapply(
+  Filter(f = function(x){inherits(x,"htmlwidget")}, x = output),
+  function(hw){
+    htmltools::renderTags(hw)$dependencies
+  }
+)
+htmltools::attachDependencies(x = htmltools::tagList(), value = unlist(deps,recursive=FALSE))
+```

@@ -76,6 +76,8 @@ library(Hmisc)
 # library(plotly.microbiome)
 # library(microbiome)
 library(ranacapa)
+#devtools::install_github("jbisanz/qiime2R")
+library(qiime2R)
 
 # this is to load some extension helper code, see: https://github.com/HPCBio/phyloseq-extended
 devtools::load_all('~/src/phyloseq-extended/')

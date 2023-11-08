@@ -88,6 +88,8 @@ physeq.active <- physeq.prop.nowat
 
 ### Bray Curtis metric
 
+
+
 ```{r }
 set.seed(1234)
 
@@ -99,6 +101,7 @@ p1 = plot_ordination(physeq.active,
                      shape = "Simple_extraction",
                      title="Samples") + geom_point(size = 2.5)
 p1 + ggtitle("PCoA, Bray Curtis distance")
+ # facet_wrap(~Simple_extraction)
 #ggplotly(p1 + ggtitle("PCoA, Bray Curtis distance"))
 #+  scale_fill_viridis_d()
 ```
@@ -114,12 +117,27 @@ finalPhyseq.ord <- ordinate(physeq.active, "PCoA", "bray")
 p1 = plot_ordination(physeq.active,
                      finalPhyseq.ord,
                      type="samples",
-                     color="Density",
-                     shape = "Competition",
-                     label = "Environment",
-                     title="PCoA, Bray Curtis distance") + geom_point(size = 2.5)
+                     color="Environment",
+                     shape = "Density",
+ #                   label = "Environment",
+                     title="PCoA, Bray Curtis distance") + 
+  geom_point(size = 3, aes(fill=Competition)) + 
+  scale_shape_manual(values = c(21, 22, 23) )+
+  scale_color_manual(values = c("black","gray") ) +
+  scale_fill_manual(values=c("#EC9DAE","#AEDE94", "#9dd6ec")) +
+  #scale_fill_manual(values=c("black","darkgray", "white")) +
+  guides(fill=guide_legend(override.aes=list(shape=21)))+
+  guides(color=guide_legend(override.aes=list(shape=21))) 
+  guides(fill=guide_legend(override.aes=list(shape=21,fill=c("#EC9DAE","#AEDE94","#9dd6ec"),color=c("black","white"))))
+  #guides(fill=guide_legend(override.aes=list(shape=21,fill=c("black","darkgray", "white"),color=c("black","gray"))))
 p1
-ggsave("pcoa-braycurtis-density-competition-environment_Mosquito.pdf", path = "../results/final-plots/", device = "pdf")
+ggsave("pcoa-braycurtis-density-competition-environment_Mosquito_color.pdf", path = "../results/final-plots/", device = "pdf")
+
+#aes(alpha=Environment)
+#ifelse(, NA, Competition)
+#aes(color=Density, shape=Competition, fill=Env_bool),
+#scale_shape_manual(values=c(21,22,23)) +
+#  scale_fill_discrete(na.value=NA, guide="none")
 ```
 
 One could argue that Density 40 are slighty more skewed towards the right and Density 20 to the left.
@@ -167,13 +185,22 @@ finalPhyseq.ord <- ordinate(physeq.active, "PCoA", "wunifrac")
 p1 = plot_ordination(physeq.active,
                      finalPhyseq.ord,
                      type="samples",
-                     color="Density",
-                     shape = "Competition",
-                     label = "Environment",
-                     title="PCoA, Weighted Unifrac distance") + geom_point(size = 2.5)
+                     color="Environment",
+                     shape = "Density",
+                     title="PCoA, Weighted Unifrac distance") +
+  geom_point(size = 3, aes(fill=Competition)) + 
+  scale_shape_manual(values = c(21, 22, 23) )+
+  scale_color_manual(values = c("black","gray") ) +
+  #scale_fill_manual(values=c("#EC9DAE","#AEDE94", "#9dd6ec")) +
+  scale_fill_manual(values=c("black","darkgray", "white")) +
+  guides(fill=guide_legend(override.aes=list(shape=21)))+
+  guides(color=guide_legend(override.aes=list(shape=21))) 
+  #guides(fill=guide_legend(override.aes=list(shape=21,fill=c("#EC9DAE","#AEDE94","#9dd6ec"),color=c("black","white"))))
+  guides(fill=guide_legend(override.aes=list(shape=21,fill=c("black","darkgray", "white"),color=c("black","gray"))))
+  
 p1
 
-ggsave("pcoa-wunifrac-density-competition-environment_Mosquito.pdf", path = "../results/final-plots/", device = "pdf")
+ggsave("pcoa-wunifrac-density-competition-environment_Mosquito_bgw.pdf", path = "../results/final-plots/", device = "pdf")
 ```
 
 Again, one could argue that Density splits somewhat, but pretty well mixed.
@@ -226,12 +253,21 @@ finalPhyseq.ord <- ordinate(physeq.active, "PCoA", "bray")
 p1 = plot_ordination(physeq.active,
                      finalPhyseq.ord,
                      type="samples",
-                     color="Density",
-                     shape = "Competition",
+                     color="Environment",
+                     shape = "Density",
                      label = "Environment",
-                     title="PCoA, Bray Curtis distance") + geom_point(size = 2.5)
+                     title="PCoA, Bray Curtis distance") + 
+  geom_point(size = 3, aes(fill=Competition)) + 
+  scale_shape_manual(values = c(21, 22, 23) )+
+  scale_color_manual(values = c("black","gray") ) +
+  #scale_fill_manual(values=c("#EC9DAE","#AEDE94", "#9dd6ec")) +
+  scale_fill_manual(values=c("black","darkgray", "white")) +
+  guides(fill=guide_legend(override.aes=list(shape=21)))+
+  guides(color=guide_legend(override.aes=list(shape=21))) 
+  #guides(fill=guide_legend(override.aes=list(shape=21,fill=c("#EC9DAE","#AEDE94","#9dd6ec"),color=c("black","white"))))
+  guides(fill=guide_legend(override.aes=list(shape=21,fill=c("black","darkgray", "white"),color=c("black","gray"))))
 p1
-ggsave("pcoa-braycurtis-density-competition-environment_ExpWater.pdf", path = "../results/final-plots/", device = "pdf")
+ggsave("pcoa-braycurtis-density-competition-environment_ExpWater_bgw.pdf", path = "../results/final-plots/", device = "pdf")
 ```
 
 Infusion samples definitely separate (centered in this plot), but everything else seems quite mixed.
@@ -279,13 +315,22 @@ finalPhyseq.ord <- ordinate(physeq.active, "PCoA", "wunifrac")
 p1 = plot_ordination(physeq.active,
                      finalPhyseq.ord,
                      type="samples",
-                     color="Density",
-                     shape = "Competition",
+                     color="Environment",
+                     shape = "Density",
                      label = "Environment",
-                     title="PCoA, Weighted Unifrac distance") + geom_point(size = 2.5)
+                     title="PCoA, Weighted Unifrac distance") + 
+  geom_point(size = 3, aes(fill=Competition)) + 
+  scale_shape_manual(values = c(21, 22, 23) )+
+  scale_color_manual(values = c("black","gray") ) +
+  scale_fill_manual(values=c("#EC9DAE","#AEDE94", "#9dd6ec")) +
+  #scale_fill_manual(values=c("black","darkgray", "white")) +
+  guides(fill=guide_legend(override.aes=list(shape=21)))+
+  guides(color=guide_legend(override.aes=list(shape=21))) 
+  guides(fill=guide_legend(override.aes=list(shape=21,fill=c("#EC9DAE","#AEDE94","#9dd6ec"),color=c("black","white"))))
+  #guides(fill=guide_legend(override.aes=list(shape=21,fill=c("black","darkgray", "white"),color=c("black","gray"))))
 p1
 
-ggsave("pcoa-wunifrac-density-competition-environment_ExpWater.pdf", path = "../results/final-plots/", device = "pdf")
+ggsave("pcoa-wunifrac-density-competition-environment_ExpWater_color.pdf", path = "../results/final-plots/", device = "pdf")
 ```
 
 Infusion still separates from the others. Everything else quite mixed.

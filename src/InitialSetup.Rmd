@@ -69,7 +69,6 @@ DADA2: Proportion of ASVs that are unassigned at each rank
 
 ```{r}
 taxtab.d <- readRDS('../2022-Sept-16S/Phyloseq/tax_final.simple.RDS')
-library(qiime2R)
 taxtab.q <- read_qza('../2022-Sept-16S/Q2taxa/taxonomy.q2-classifier.qza')
 
 # this is needed for some downstream steps
